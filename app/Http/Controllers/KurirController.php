@@ -1,0 +1,158 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Order;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
+class KurirController extends Controller
+{
+    public function index()
+    {
+        $tab = request('tab', 'tersedia');
+
+        // Order yang sudah diambil kurir ini (dikemas_kurir / dikirim)
+        $aktif = Order::where('kurir_id', Auth::id())
+            ->whereIn('status', ['dikemas', 'dikirim'])
+            ->with(['items.product.primaryImage', 'items.variant', 'shippingOption'])
+            ->orderByRaw("FIELD(status, 'dikemas', 'dikirim')")
+            ->orderBy('updated_at', 'asc')
+            ->get();
+
+        // HANYA order yang sudah dikemas admin tapi belum diambil kurir manapun
+        $tersedia = Order::where('status', 'dikemas')
+            ->whereNull('kurir_id')
+            ->with(['items.product.primaryImage', 'items.variant', 'shippingOption'])
+            ->orderBy('updated_at', 'asc')
+            ->get();
+
+        $history = Order::where('kurir_id', Auth::id())
+            ->where('status', 'selesai')
+            ->with(['user', 'items.product.primaryImage', 'shippingOption'])
+            ->orderBy('updated_at', 'desc')
+            ->paginate(10, ['*'], 'page');
+
+        return view('kurir.index', compact('aktif', 'tersedia', 'history', 'tab'));
+    }
+
+    public function show($id)
+    {
+        $order = Order::where('order_id', $id)
+            ->where(function ($q) {
+                $q->where('kurir_id', Auth::id())
+                  ->orWhere(function ($q2) {
+                      // Bisa lihat detail order dikemas yang belum diambil siapapun
+                      $q2->where('status', 'dikemas')->whereNull('kurir_id');
+                  });
+            })
+            ->with([
+                'user.province', 'user.city', 'user.district', 'user.village',
+                'items.product.primaryImage', 'items.variant', 'shippingOption',
+            ])
+            ->firstOrFail();
+
+        return view('kurir.show', compact('order'));
+    }
+
+    /**
+     * Kurir ambil order — hanya order yang sudah dikemas admin.
+     * first-come-first-served dengan DB lock.
+     */
+    public function takeOrder($id)
+    {
+        try {
+            DB::transaction(function () use ($id) {
+                $order = Order::where('order_id', $id)
+                    ->where('status', 'dikemas')   // ← hanya yang sudah dikemas admin
+                    ->whereNull('kurir_id')
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $order->update([
+                    'kurir_id'   => Auth::id(),
+                    'nama_kurir' => Auth::user()->name,
+                    // status tetap 'dikemas', kurir yang handle pengemasan fisik & kirim
+                ]);
+            });
+
+            return redirect()->route('kurir.index', ['tab' => 'aktif'])
+                ->with('success', "Paket #$id berhasil kamu ambil! Segera dikemas dan kirim ya 📦");
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->route('kurir.index', ['tab' => 'tersedia'])
+                ->with('error', "Paket #$id sudah diambil kurir lain. Cari paket lainnya!");
+        }
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $order = Order::where('order_id', $id)
+            ->where('kurir_id', Auth::id())
+            ->firstOrFail();
+
+        if ($request->status === 'dikirim') {
+            if ($order->status !== 'dikemas') {
+                return back()->with('error', 'Order belum dikemas, tidak bisa dikirim!');
+            }
+            $resiPrefix = strtoupper(substr(Auth::user()->name, 0, 3));
+            $nomorResi  = $resiPrefix . Auth::id() . $order->order_id . time();
+            $order->update([
+                'status'     => 'dikirim',
+                'nomor_resi' => $nomorResi,
+                'nama_kurir' => Auth::user()->name,
+                'dikirim_at' => now(),
+            ]);
+            return back()->with('success', "Paket #{$order->order_id} sedang dikirim! Resi: {$nomorResi}");
+        }
+
+        if ($request->status === 'selesai') {
+            if ($order->status !== 'dikirim') {
+                return back()->with('error', 'Order belum dalam status dikirim!');
+            }
+            $request->validate([
+                'foto_konfirmasi' => 'required|image|mimes:jpg,jpeg,png|max:3072',
+            ], [
+                'foto_konfirmasi.required' => 'Foto konfirmasi wajib diupload.',
+                'foto_konfirmasi.max'      => 'Ukuran foto maksimal 3MB.',
+            ]);
+            $fotoPath = $request->file('foto_konfirmasi')->store('konfirmasi-pengiriman', 'public');
+            DB::transaction(function () use ($order, $fotoPath) {
+                $order->update(['status' => 'selesai', 'foto_konfirmasi' => $fotoPath]);
+                Auth::user()->increment('saldo', $order->ongkir);
+            });
+            return back()->with('success', "Order #{$order->order_id} selesai! Ongkir Rp " . number_format($order->ongkir, 0, ',', '.') . " masuk ke saldo kamu.");
+        }
+
+        return back()->with('error', 'Status tidak valid.');
+    }
+
+    public function saldo()
+    {
+        $kurir = Auth::user();
+        $riwayat = Order::where('kurir_id', $kurir->user_id)
+            ->where('status', 'selesai')
+            ->with(['user', 'shippingOption'])
+            ->orderBy('updated_at', 'desc')
+            ->paginate(10);
+        $totalPenghasilan = Order::where('kurir_id', $kurir->user_id)
+            ->where('status', 'selesai')->sum('ongkir');
+
+        return view('kurir.saldo', compact('kurir', 'riwayat', 'totalPenghasilan'));
+    }
+
+    // Admin manual assign (opsional, edge case)
+    public function assign(Request $request, $id)
+    {
+        $request->validate(['kurir_id' => 'required|exists:users,user_id']);
+        $kurir = User::where('user_id', $request->kurir_id)->where('role', 'kurir')->firstOrFail();
+        $order = Order::where('order_id', $id)->where('status', 'dikemas')->firstOrFail();
+        $order->update([
+            'kurir_id'   => $kurir->user_id,
+            'nama_kurir' => $kurir->name,
+        ]);
+        return back()->with('success', "Kurir {$kurir->name} berhasil di-assign ke Order #{$id}!");
+    }
+}
