@@ -38,7 +38,6 @@
                     @csrf
                     @method('patch')
 
-                    {{-- Nama, Telepon, Email --}}
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-2">Nama Lengkap</label>
@@ -58,7 +57,6 @@
                         </div>
                     </div>
 
-                    {{-- SECTION KHUSUS ADMIN: INFO TOKO --}}
                     @if(auth()->user()->role === 'admin')
                     <hr class="border-gray-100">
                     <div>
@@ -86,7 +84,6 @@
                     </div>
                     @endif
 
-                    {{-- SALDO --}}
                     @if(auth()->user()->role !== 'admin')
                     <hr class="border-gray-100">
                     <div class="bg-blue-50 border border-blue-100 rounded-2xl p-5 flex items-center justify-between">
@@ -104,7 +101,6 @@
                     </div>
                     @endif
 
-                    {{-- KELOLA ALAMAT --}}
                     @if(auth()->user()->role !== 'admin')
                     <hr class="border-gray-100">
                     <div class="flex items-center justify-between">
@@ -131,6 +127,7 @@
                     </div>
                 </form>
             </div>
+
         </div>
     </div>
 </x-app-layout>

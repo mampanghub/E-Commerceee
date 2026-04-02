@@ -57,10 +57,6 @@ class KurirController extends Controller
         return view('kurir.show', compact('order'));
     }
 
-    /**
-     * Kurir ambil order — hanya order yang sudah dikemas admin.
-     * first-come-first-served dengan DB lock.
-     */
     public function takeOrder($id)
     {
         try {
@@ -74,7 +70,6 @@ class KurirController extends Controller
                 $order->update([
                     'kurir_id'   => Auth::id(),
                     'nama_kurir' => Auth::user()->name,
-                    // status tetap 'dikemas', kurir yang handle pengemasan fisik & kirim
                 ]);
             });
 
@@ -120,6 +115,10 @@ class KurirController extends Controller
             ]);
             $fotoPath = $request->file('foto_konfirmasi')->store('konfirmasi-pengiriman', 'public');
             DB::transaction(function () use ($order, $fotoPath) {
+                // Lock row — cegah double-increment jika pembeli konfirmasi duluan
+                $fresh = Order::where('order_id', $order->order_id)->lockForUpdate()->first();
+                if ($fresh->status === 'selesai') return;
+
                 $order->update(['status' => 'selesai', 'foto_konfirmasi' => $fotoPath]);
                 Auth::user()->increment('saldo', $order->ongkir);
             });

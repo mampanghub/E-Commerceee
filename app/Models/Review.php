@@ -13,6 +13,7 @@ class Review extends Model
         'product_id',
         'order_id',
         'bintang',
+        'variant_id',
         'komentar',
     ];
 
@@ -29,5 +30,10 @@ class Review extends Model
     public function order()
     {
         return $this->belongsTo(Order::class, 'order_id', 'order_id');
+    }
+
+    public function variant()
+    {
+        return $this->belongsTo(ProductVariant::class, 'variant_id', 'variant_id');
     }
 }

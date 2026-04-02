@@ -211,18 +211,19 @@ class ProductController extends Controller
     {
         $product = Product::with(['store', 'category', 'images', 'variants'])->findOrFail($id);
 
-        // Ambil semua review produk ini, urut terbaru
-        $reviews = \App\Models\Review::with('user')
+        $reviews = \App\Models\Review::with(['user', 'variant'])
             ->where('product_id', $id)
             ->latest()
             ->get();
 
-        // Order milik user yang login yang sudah selesai & mengandung produk ini
         $eligibleOrders = collect();
         if (auth()->check() && auth()->user()->role === 'pembeli') {
             $eligibleOrders = \App\Models\Order::where('user_id', auth()->id())
                 ->whereIn('status', ['selesai', 'delivered', 'completed'])
-                ->whereHas('items.variant.product', fn($q) => $q->where('product_id', $id))
+                ->whereHas('items', fn($q) => $q->where('product_id', $id))
+                ->with([
+                    'items' => fn($q) => $q->where('product_id', $id)->with('variant'),
+                ])
                 ->get();
         }
 

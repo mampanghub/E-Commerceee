@@ -108,8 +108,12 @@ class OrderController extends Controller
                 (string) $selectedAddress->province_id
             );
 
-            $ongkirDasar = $this->shippingService->hitungOngkirDasar($zone, $beratGram);
-            $ongkir      = $this->shippingService->hitungOngkirFinal($ongkirDasar, $shippingOption);
+            $ongkirDasar = $this->shippingService->hitungOngkirDasar(
+                (string) $storeProvinceId,
+                (string) $selectedAddress->province_id,
+                $beratGram
+            );
+            $ongkir = $this->shippingService->hitungOngkirFinal($ongkirDasar, $shippingOption);
             $totalAkhir  = $totalProduk + $ongkir + $biayaAdmin;
 
             [$estimasiMin, $estimasiMax] = app(\App\Services\ShippingService::class)
@@ -157,9 +161,9 @@ class OrderController extends Controller
             }
 
             // Re-fetch opsi untuk view
-            $shippingData    = $this->shippingService->getOpsiPengiriman(
+            $shippingData = $this->shippingService->getOpsiPengiriman(
                 (string) $storeProvinceId,
-                (string) $user->province_id,
+                (string) $selectedAddress->province_id,  // ← benar
                 $beratGram
             );
             $opsiOngkir      = $shippingData['options'];
@@ -354,11 +358,25 @@ class OrderController extends Controller
     {
         if (auth()->user()->role !== 'admin') abort(403);
 
-        $orders = Order::with(['items.product.primaryImage', 'user', 'shippingOption'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $status = request('status', 'semua');
 
-        return view('orders.index', compact('orders'));
+        $query = Order::with(['items.product.primaryImage', 'items.product.images', 'user', 'shippingOption'])
+            ->orderBy('created_at', 'desc');
+
+        if ($status !== 'semua') {
+            $query->where('status', $status);
+        }
+
+        $orders = $query->paginate(10)->withQueryString();
+
+        // Hitung count per status untuk badge tab
+        $counts = Order::selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->toArray();
+        $counts['semua'] = array_sum($counts);
+
+        return view('orders.index', compact('orders', 'counts', 'status'));
     }
 
     // ─────────────────────────────────────────────

@@ -36,7 +36,6 @@ class ProfileController extends Controller
             'no_telp' => $request->no_telp,
         ]);
 
-        // Kalau admin, sync nama ke toko
         if ($user->role === 'admin' && $user->store) {
             $user->store->update([
                 'province_id' => $user->store->province_id,

@@ -10,7 +10,7 @@
                         <h1 class="text-2xl font-black text-slate-900 tracking-tight">Pesanan Masuk</h1>
                     </div>
                     <span class="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-xs font-black uppercase tracking-widest border border-blue-100">
-                        {{ $orders->count() }} Order
+                        {{ $counts['semua'] ?? 0 }} Order
                     </span>
                 </div>
             </div>
@@ -18,7 +18,7 @@
 
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-            @if($orders->isEmpty())
+            @if(($counts['semua'] ?? 0) === 0)
             <div class="bg-white rounded-3xl border border-slate-100 py-24 text-center">
                 <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -32,15 +32,14 @@
             {{-- Filter tabs --}}
             @php
                 $allStatuses = ['semua', 'dibayar', 'dikemas', 'dikirim', 'selesai', 'batal'];
-                $activeTab = request('status', 'semua');
             @endphp
             <div class="bg-blue-100/60 rounded-2xl p-1.5 flex overflow-x-auto mb-6 gap-0.5">
                 @foreach($allStatuses as $s)
                 @php
-                    $count = $s === 'semua' ? $orders->count() : $orders->where('status', $s)->count();
-                    $isActive = $activeTab === $s;
+                    $count = $counts[$s] ?? 0;
+                    $isActive = $status === $s;
                 @endphp
-                <a href="{{ request()->fullUrlWithQuery(['status' => $s]) }}"
+                <a href="{{ request()->fullUrlWithQuery(['status' => $s, 'page' => 1]) }}"
                     class="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap
                     {{ $isActive
                         ? 'bg-white text-blue-600 shadow-sm shadow-blue-100'
@@ -58,11 +57,7 @@
 
             {{-- Order list --}}
             <div class="space-y-3">
-                @php
-                    $filtered = $activeTab === 'semua' ? $orders : $orders->where('status', $activeTab);
-                @endphp
-
-                @forelse($filtered as $order)
+                @forelse($orders as $order)
                 @php
                     $firstItem = $order->items->first();
                     $displayImage = null;
@@ -148,10 +143,22 @@
 
                 @empty
                 <div class="bg-white rounded-2xl border border-slate-100 py-16 text-center">
-                    <p class="text-sm font-black text-slate-300 uppercase tracking-widest">Tidak ada order {{ $activeTab }}</p>
+                    <p class="text-sm font-black text-slate-300 uppercase tracking-widest">Tidak ada order {{ $status }}</p>
                 </div>
                 @endforelse
             </div>
+
+            {{-- PAGINATION --}}
+            @if($orders->hasPages())
+            <div class="mt-6 flex items-center justify-between">
+                <p class="text-xs text-slate-400 font-semibold">
+                    Menampilkan {{ $orders->firstItem() }}–{{ $orders->lastItem() }} dari {{ $orders->total() }} order
+                </p>
+                <div>
+                    {{ $orders->links() }}
+                </div>
+            </div>
+            @endif
 
             @endif
         </div>

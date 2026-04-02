@@ -12,6 +12,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\KurirController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\ShippingSettingController;
 use Illuminate\Http\Request;
 
 // ================= HALAMAN AWAL (SEMUA BISA AKSES) =================
@@ -60,6 +61,12 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/users/create-kurir', [UserController::class, 'createKurir'])->name('admin.users.create-kurir');
     Route::post('/admin/users/store-kurir', [UserController::class, 'storeKurir'])->name('admin.users.store-kurir');
     Route::delete('/admin/users/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');
+
+    Route::put('/profile/shipping-settings', [ProfileController::class, 'updateShippingSettings'])
+        ->name('admin.shipping-settings.update');
+
+    Route::get('/admin/shipping-settings', [ShippingSettingController::class, 'index'])->name('admin.shipping-settings.index');
+    Route::put('/admin/shipping-settings', [ShippingSettingController::class, 'update'])->name('admin.shipping-settings.update');
 });
 
 // ================= PEMBELI & UMUM (SUDAH LOGIN) =================
@@ -72,7 +79,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/orders/history', [OrderController::class, 'history'])->name('orders.history');
     Route::get('/orders/manage', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{id}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice'); // ← INVOICE
+    Route::get('/orders/{id}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
     Route::match(['get', 'post'], '/checkout/review', [OrderController::class, 'checkoutReview'])->name('checkout.review');
     Route::post('/checkout', [OrderController::class, 'checkout'])->name('checkout');
@@ -97,14 +104,10 @@ Route::middleware(['auth', 'role:kurir'])->prefix('kurir')->name('kurir.')->grou
     Route::get('/', [KurirController::class, 'index'])->name('index');
     Route::get('/orders/{id}', [KurirController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{id}/status', [KurirController::class, 'updateStatus'])->name('orders.update-status');
-
-    // ← BARU: Kurir ambil order sendiri (first-come-first-served)
     Route::post('/orders/{id}/take', [KurirController::class, 'takeOrder'])->name('orders.take');
-
     Route::get('/saldo', [KurirController::class, 'saldo'])->name('saldo');
     Route::post('/orders/{id}/foto', [KurirController::class, 'uploadFoto'])->name('orders.foto');
 });
- 
 
 Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
 

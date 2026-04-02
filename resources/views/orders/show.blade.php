@@ -206,8 +206,6 @@
                                 </svg>
                             </div>
                             <div>
-                                <p class="font-black text-slate-900">{{ $order->user->name }}</p>
-                                <p class="text-sm text-blue-600 font-bold mt-0.5">{{ $order->user->no_telp }}</p>
                                 <p class="font-black text-slate-900">{{ $order->nama_penerima ?? $order->user->name }}
                                 </p>
                                 <p class="text-sm text-blue-600 font-bold mt-0.5">

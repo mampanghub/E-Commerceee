@@ -19,22 +19,27 @@ class ReviewController extends Controller
 
         $product = Product::findOrFail($product_id);
 
-        // Pastiin order ini milik user yang login & statusnya selesai/delivered
         $order = Order::where('order_id', $request->order_id)
             ->where('user_id', Auth::id())
             ->whereIn('status', ['selesai', 'delivered', 'completed'])
             ->firstOrFail();
 
-        // Pastiin produk ini memang ada di dalam order tersebut
-        $orderHasProduct = $order->items()
-            ->whereHas('variant.product', fn($q) => $q->where('product_id', $product_id))
-            ->exists();
+        // Ambil order item untuk produk ini (biar dapat variant_id-nya)
+        $orderItem = $order->items()
+            ->where('product_id', $product_id)
+            ->first();
 
-        if (!$orderHasProduct) {
+        // Fallback: cari lewat variant.product kalau direct lookup gagal
+        if (!$orderItem) {
+            $orderItem = $order->items()
+                ->whereHas('variant.product', fn($q) => $q->where('product_id', $product_id))
+                ->first();
+        }
+
+        if (!$orderItem) {
             return back()->with('error', 'Kamu belum pernah membeli produk ini.');
         }
 
-        // Cek sudah pernah review belum
         $sudahReview = Review::where('user_id', Auth::id())
             ->where('product_id', $product_id)
             ->where('order_id', $request->order_id)
@@ -48,6 +53,7 @@ class ReviewController extends Controller
             'user_id'    => Auth::id(),
             'product_id' => $product_id,
             'order_id'   => $request->order_id,
+            'variant_id' => $orderItem->variant_id, // simpan variant yang dibeli
             'bintang'    => $request->bintang,
             'komentar'   => $request->komentar,
         ]);
