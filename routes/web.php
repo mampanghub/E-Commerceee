@@ -62,9 +62,6 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/users/store-kurir', [UserController::class, 'storeKurir'])->name('admin.users.store-kurir');
     Route::delete('/admin/users/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');
 
-    Route::put('/profile/shipping-settings', [ProfileController::class, 'updateShippingSettings'])
-        ->name('admin.shipping-settings.update');
-
     Route::get('/admin/shipping-settings', [ShippingSettingController::class, 'index'])->name('admin.shipping-settings.index');
     Route::put('/admin/shipping-settings', [ShippingSettingController::class, 'update'])->name('admin.shipping-settings.update');
 });
@@ -110,5 +107,6 @@ Route::middleware(['auth', 'role:kurir'])->prefix('kurir')->name('kurir.')->grou
 });
 
 Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/search/suggestions', [ProductController::class, 'suggestions'])->name('search.suggestions');
 
 require __DIR__ . '/auth.php';

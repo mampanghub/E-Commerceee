@@ -48,7 +48,6 @@
                     fn($o) => $reviews->where('user_id', auth()->id())->where('order_id', $o->order_id)->count() > 0
                 );
 
-                // Bangun data preview per order_id untuk JS
                 $orderPreviewData = [];
                 foreach ($eligibleOrders as $ord) {
                     if ($reviews->where('user_id', auth()->id())->where('order_id', $ord->order_id)->count() > 0) continue;
@@ -56,7 +55,6 @@
                     $item = $ord->items->first();
                     if (!$item) continue;
 
-                    // Cari gambar sesuai varian item yang dibeli di order ini
                     $gambar = null;
                     if ($item->variant_id) {
                         $gambar = $product->images->where('variant_id', $item->variant_id)->first();
@@ -83,7 +81,6 @@
                         Tulis Ulasan
                     </h3>
 
-                    {{-- Preview produk — diupdate JS saat ganti order --}}
                     <div class="flex items-center gap-4 bg-slate-50 border border-slate-100 rounded-xl p-3 mb-5">
                         <img id="review-preview-img"
                             src="{{ $orderPreviewData[$firstOrderId]['img'] }}"
@@ -119,7 +116,6 @@
                             <input type="hidden" name="order_id" value="{{ $firstOrderId }}">
                         @endif
 
-                        {{-- Pilih bintang --}}
                         <div>
                             <label class="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Rating</label>
                             <div class="flex gap-1.5" id="star-selector">
@@ -136,7 +132,6 @@
                             <p class="text-xs text-slate-400 mt-1.5 font-medium" id="star-label">Pilih bintang</p>
                         </div>
 
-                        {{-- Komentar --}}
                         <div>
                             <label class="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">
                                 Komentar <span class="normal-case font-normal">(opsional)</span>
@@ -163,8 +158,8 @@
         @endif
     @endauth
 
-    {{-- ===== LIST REVIEW ===== --}}
-    <div class="space-y-3">
+    {{-- ===== LIST REVIEW — grid 3 kolom, baris berikutnya otomatis ===== --}}
+    <div>
         <h3 class="font-black text-slate-900 text-base mb-4">
             Semua Ulasan
             @if ($reviews->count() > 0)
@@ -181,56 +176,66 @@
                 $reviewGambar = $reviewGambar ?? ($product->primaryImage ?? $product->images->first());
             @endphp
 
-            <div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:border-slate-200 transition-all">
-                <div class="flex items-start gap-4">
-                    <div class="shrink-0 text-center">
-                        <img src="{{ $reviewGambar ? asset('storage/' . $reviewGambar->gambar) : 'https://placehold.co/56x56?text=?' }}"
-                            class="w-14 h-14 rounded-xl object-cover bg-slate-100"
-                            onerror="this.src='https://placehold.co/56x56?text=?'">
-                        @if ($review->variant_id && $review->variant)
-                            <p class="text-[9px] font-black text-slate-400 mt-1 max-w-[56px] truncate mx-auto">
-                                {{ $review->variant->nama_varian }}
-                            </p>
-                        @endif
-                    </div>
+            {{-- Buka baris grid setiap 3 item --}}
+            @if ($loop->index % 3 === 0)
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
+            @endif
 
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-start justify-between gap-2 mb-2">
-                            <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-black text-xs shrink-0">
-                                    {{ strtoupper(substr($review->user->name ?? 'U', 0, 1)) }}
-                                </div>
-                                <div>
-                                    <p class="text-sm font-black text-slate-900 leading-none">{{ $review->user->name ?? 'Pengguna' }}</p>
-                                    <p class="text-[10px] text-slate-400 mt-0.5">{{ $review->created_at->diffForHumans() }}</p>
-                                </div>
+                <div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:border-slate-200 transition-all flex flex-col gap-3">
+                    {{-- Header: avatar + nama + waktu + bintang --}}
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-black text-xs shrink-0">
+                                {{ strtoupper(substr($review->user->name ?? 'U', 0, 1)) }}
                             </div>
-                            <div class="flex gap-0.5 shrink-0">
-                                @for ($i = 1; $i <= 5; $i++)
-                                    <svg class="w-3.5 h-3.5 {{ $i <= $review->bintang ? 'text-indigo-500' : 'text-slate-200' }}"
-                                        fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                @endfor
+                            <div>
+                                <p class="text-sm font-black text-slate-900 leading-none">{{ $review->user->name ?? 'Pengguna' }}</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">{{ $review->created_at->diffForHumans() }}</p>
                             </div>
                         </div>
-
-                        @if ($review->komentar)
-                            <p class="text-sm text-slate-600 leading-relaxed">{{ $review->komentar }}</p>
-                        @endif
-
-                        @auth
-                            @if (auth()->id() === $review->user_id)
-                                <form action="{{ route('reviews.destroy', $review->review_id) }}" method="POST"
-                                    class="mt-2" onsubmit="return confirm('Hapus ulasan ini?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="text-xs text-red-400 hover:text-red-600 font-bold">Hapus ulasan</button>
-                                </form>
-                            @endif
-                        @endauth
+                        <div class="flex gap-0.5 shrink-0">
+                            @for ($i = 1; $i <= 5; $i++)
+                                <svg class="w-3.5 h-3.5 {{ $i <= $review->bintang ? 'text-indigo-500' : 'text-slate-200' }}"
+                                    fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                            @endfor
+                        </div>
                     </div>
+
+                    {{-- Foto produk + varian --}}
+                    <div class="flex items-center gap-3">
+                        <img src="{{ $reviewGambar ? asset('storage/' . $reviewGambar->gambar) : 'https://placehold.co/48x48?text=?' }}"
+                            class="w-12 h-12 rounded-xl object-cover bg-slate-100 shrink-0"
+                            onerror="this.src='https://placehold.co/48x48?text=?'">
+                        @if ($review->variant_id && $review->variant)
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wide">
+                                {{ $review->variant->nama_varian }}
+                            </span>
+                        @endif
+                    </div>
+
+                    {{-- Komentar --}}
+                    @if ($review->komentar)
+                        <p class="text-sm text-slate-600 leading-relaxed flex-1">{{ $review->komentar }}</p>
+                    @endif
+
+                    {{-- Hapus (owner only) --}}
+                    @auth
+                        @if (auth()->id() === $review->user_id)
+                            <form action="{{ route('reviews.destroy', $review->review_id) }}" method="POST"
+                                onsubmit="return confirm('Hapus ulasan ini?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="text-xs text-red-400 hover:text-red-600 font-bold">Hapus ulasan</button>
+                            </form>
+                        @endif
+                    @endauth
                 </div>
-            </div>
+
+            {{-- Tutup baris grid setiap 3 item atau di akhir loop --}}
+            @if ($loop->index % 3 === 2 || $loop->last)
+                </div>
+            @endif
 
         @empty
             <div class="text-center py-16 text-slate-400">
@@ -245,7 +250,6 @@
 </div>
 
 <script>
-    // ── Update preview foto & nama varian saat dropdown order diganti ──
     const orderSelect = document.getElementById('review-order-select');
     if (orderSelect) {
         orderSelect.addEventListener('change', function () {
@@ -276,7 +280,6 @@
         });
     }
 
-    // ── Interaksi klik bintang ──
     const starLabels = ['', 'Buruk', 'Kurang', 'Cukup', 'Bagus', 'Sangat Bagus'];
     document.querySelectorAll('#star-selector label').forEach((label, idx) => {
         label.addEventListener('click', () => {

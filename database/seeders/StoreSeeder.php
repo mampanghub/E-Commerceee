@@ -29,6 +29,7 @@ class StoreSeeder extends Seeder
             'user_id'     => $admin->user_id,
             'nama_toko'   => 'Mampang Pedia',
             'deskripsi'   => 'Toko resmi Mampang Pedia. Menjual berbagai produk pilihan dengan harga terbaik.',
+            'province_id' => '32', // Jawa Barat (Depok)
             'status'      => 'active',
             'saldo'       => 0,
             'created_at'  => now(),

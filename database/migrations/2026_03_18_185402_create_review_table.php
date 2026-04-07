@@ -13,14 +13,25 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('order_id');
+            $table->unsignedBigInteger('variant_id')->nullable();
             $table->tinyInteger('bintang')->unsigned();
             $table->text('komentar')->nullable();
             $table->timestamps();
 
-            // Foreign key ke users — sesuaikan 'user_id' dengan primary key tabel users lo
-            $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
-            $table->foreign('product_id')->references('product_id')->on('products')->onDelete('cascade');
-            $table->foreign('order_id')->references('order_id')->on('orders')->onDelete('cascade');
+            $table->foreign('user_id')
+                ->references('user_id')
+                ->on('users')
+                ->cascadeOnDelete();
+
+            $table->foreign('product_id')
+                ->references('product_id')
+                ->on('products')
+                ->cascadeOnDelete();
+
+            $table->foreign('order_id')
+                ->references('order_id')
+                ->on('orders')
+                ->cascadeOnDelete();
 
             // 1 user hanya bisa review 1x per produk per order
             $table->unique(['user_id', 'product_id', 'order_id']);

@@ -513,6 +513,13 @@
             border: 1px solid rgba(255, 255, 255, .12);
         }
 
+        .product-card-disabled {
+            pointer-events: none;
+            opacity: 0.5;
+            filter: grayscale(60%);
+            cursor: not-allowed;
+        }
+
         /* RESPONSIVE */
         @media (max-width:1024px) {
             .category-grid {
@@ -594,7 +601,8 @@
 
                 <div class="product-grid">
                     @forelse ($products as $product)
-                        <a href="{{ url('/login') }}" class="product-card">
+                        <a href="{{ $product->total_stok <= 0 ? 'javascript:void(0)' : url('/login') }}"
+                            class="product-card {{ $product->total_stok <= 0 ? 'product-card-disabled' : '' }}">
                             <div class="product-img-wrap">
                                 @if ($product->primaryImage && $product->primaryImage->gambar)
                                     <img src="{{ Storage::url($product->primaryImage->gambar) }}"
@@ -615,39 +623,58 @@
                             <div class="product-info">
                                 <div class="product-name">{{ $product->nama_produk }}</div>
                                 <div>
-                                    <span class="product-price">Rp{{ number_format($product->harga, 0, ',', '.') }}</span>
+                                    <span
+                                        class="product-price">Rp{{ number_format($product->harga, 0, ',', '.') }}</span>
                                 </div>
                                 @php
-    $avg  = round($product->reviews_avg_bintang ?? 0, 1);
-    $full = floor($avg);
-    $half = ($avg - $full) >= 0.5 ? 1 : 0;
-    $empty = 5 - $full - $half;
-@endphp
-<div style="display:flex;align-items:center;gap:4px;margin-top:5px;">
-    @for($i = 0; $i < $full; $i++)
-        <svg style="width:12px;height:12px;color:#f59e0b;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-    @endfor
-    @if($half)
-        <svg style="width:12px;height:12px;flex-shrink:0;" viewBox="0 0 20 20">
-            <defs><linearGradient id="half-{{ $product->product_id }}"><stop offset="50%" stop-color="#f59e0b"/><stop offset="50%" stop-color="#e2e8f0"/></linearGradient></defs>
-            <path fill="url(#half-{{ $product->product_id }})" d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-        </svg>
-    @endif
-    @for($i = 0; $i < $empty; $i++)
-        <svg style="width:12px;height:12px;color:#e2e8f0;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-    @endfor
-    @if($product->reviews_count > 0)
-        <span style="font-size:10px;font-weight:700;color:#64748b;">{{ $avg }}</span>
-        <span style="font-size:10px;color:#94a3b8;">({{ $product->reviews_count }})</span>
-    @else
-        <span style="font-size:10px;color:#cbd5e1;">Belum ada ulasan</span>
-    @endif
-    @if(($product->terjual ?? 0) > 0)
-        <span style="font-size:10px;color:#94a3b8;">· {{ $product->terjual }}+ terjual</span>
-    @endif
-</div>
+                                    $avg = round($product->reviews_avg_bintang ?? 0, 1);
+                                    $full = floor($avg);
+                                    $half = $avg - $full >= 0.5 ? 1 : 0;
+                                    $empty = 5 - $full - $half;
+                                @endphp
+                                <div style="display:flex;align-items:center;gap:4px;margin-top:5px;">
+                                    @for ($i = 0; $i < $full; $i++)
+                                        <svg style="width:12px;height:12px;color:#f59e0b;flex-shrink:0;"
+                                            fill="currentColor" viewBox="0 0 20 20">
+                                            <path
+                                                d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                        </svg>
+                                    @endfor
+                                    @if ($half)
+                                        <svg style="width:12px;height:12px;flex-shrink:0;" viewBox="0 0 20 20">
+                                            <defs>
+                                                <linearGradient id="half-{{ $product->product_id }}">
+                                                    <stop offset="50%" stop-color="#f59e0b" />
+                                                    <stop offset="50%" stop-color="#e2e8f0" />
+                                                </linearGradient>
+                                            </defs>
+                                            <path fill="url(#half-{{ $product->product_id }})"
+                                                d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                        </svg>
+                                    @endif
+                                    @for ($i = 0; $i < $empty; $i++)
+                                        <svg style="width:12px;height:12px;color:#e2e8f0;flex-shrink:0;"
+                                            fill="currentColor" viewBox="0 0 20 20">
+                                            <path
+                                                d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                        </svg>
+                                    @endfor
+                                    @if ($product->reviews_count > 0)
+                                        <span
+                                            style="font-size:10px;font-weight:700;color:#64748b;">{{ $avg }}</span>
+                                        <span
+                                            style="font-size:10px;color:#94a3b8;">({{ $product->reviews_count }})</span>
+                                    @else
+                                        <span style="font-size:10px;color:#cbd5e1;">Belum ada ulasan</span>
+                                    @endif
+                                    @if (($product->terjual ?? 0) > 0)
+                                        <span style="font-size:10px;color:#94a3b8;">· {{ $product->terjual }}+
+                                            terjual</span>
+                                    @endif
+                                </div>
                                 @if ($product->store)
-                                    <div class="product-loc">📍 {{ $product->store->nama_toko ?? $product->store->name }}</div>
+                                    <div class="product-loc">📍
+                                        {{ $product->store->nama_toko ?? $product->store->name }}</div>
                                 @endif
                                 @php $stok = $product->total_stok; @endphp
                                 @if ($stok <= 0)

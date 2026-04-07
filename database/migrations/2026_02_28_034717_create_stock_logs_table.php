@@ -6,13 +6,10 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up()
+    public function up(): void
     {
         Schema::create('stock_logs', function (Blueprint $table) {
-            $table->id('log_id'); // Nama ID sesuai request lu
+            $table->id('log_id');
             $table->unsignedBigInteger('variant_id');
             $table->integer('stok_lama');
             $table->integer('stok_baru');
@@ -21,7 +18,6 @@ return new class extends Migration
             $table->string('keterangan')->nullable();
             $table->timestamps();
 
-            // Foreign Key dengan gaya penulisan lu
             $table->foreign('variant_id')
                 ->references('variant_id')
                 ->on('product_variants')
@@ -29,9 +25,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('stock_logs');

@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('order_items', function (Blueprint $table) {
@@ -30,13 +27,13 @@ return new class extends Migration
                 ->on('products')
                 ->restrictOnDelete();
 
-            $table->foreign('variant_id')->references('variant_id')->on('product_variants')->onDelete('set null');
+            $table->foreign('variant_id')
+                ->references('variant_id')
+                ->on('product_variants')
+                ->nullOnDelete();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('order_items');

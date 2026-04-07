@@ -55,8 +55,8 @@ class ShippingService
         $dLon = deg2rad($lon2 - $lon1);
 
         $a = sin($dLat / 2) * sin($dLat / 2)
-           + cos(deg2rad($lat1)) * cos(deg2rad($lat2))
-           * sin($dLon / 2) * sin($dLon / 2);
+            + cos(deg2rad($lat1)) * cos(deg2rad($lat2))
+            * sin($dLon / 2) * sin($dLon / 2);
 
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
@@ -74,12 +74,17 @@ class ShippingService
         return $coord;
     }
 
-    // ─────────────────────────────────────────────
-    // HITUNG ONGKIR
-    // ─────────────────────────────────────────────
-
     public function hitungOngkirDasar(string $provinsiToko, string $provinsiPembeli, float $beratGram): int
     {
+        $kelipatan  = max(0, ceil($beratGram / 500) - 1);
+        $biayaBerat = $kelipatan * $this->tarifPer500gr();
+
+        // Dalam provinsi → flat Rp 14.000
+        if ($provinsiToko === $provinsiPembeli) {
+            return (int) (14000 + $biayaBerat);
+        }
+
+        // Luar provinsi → per km
         $koordinatToko    = $this->getKoordinat($provinsiToko);
         $koordinatPembeli = $this->getKoordinat($provinsiPembeli);
 
@@ -92,9 +97,6 @@ class ShippingService
 
         $jarakKm    = max($jarakKm, $this->jarakMinimum());
         $biayaJarak = (int) ceil($jarakKm) * $this->tarifPerKm();
-
-        $kelipatan  = max(0, ceil($beratGram / 500) - 1);
-        $biayaBerat = $kelipatan * $this->tarifPer500gr();
 
         return (int) ($biayaJarak + $biayaBerat);
     }
@@ -171,8 +173,10 @@ class ShippingService
             $koordPembeli = $this->getKoordinat($provinsiPembeli);
             $jarakKm      = (int) ceil(max(
                 $this->hitungJarakKm(
-                    $koordToko->latitude, $koordToko->longitude,
-                    $koordPembeli->latitude, $koordPembeli->longitude
+                    $koordToko->latitude,
+                    $koordToko->longitude,
+                    $koordPembeli->latitude,
+                    $koordPembeli->longitude
                 ),
                 $this->jarakMinimum()
             ));

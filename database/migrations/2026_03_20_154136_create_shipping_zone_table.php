@@ -10,30 +10,36 @@ return new class extends Migration
     {
         Schema::create('shipping_zones', function (Blueprint $table) {
             $table->id('zone_id');
-            $table->string('nama_zona');          // "Dalam Provinsi", "Luar Provinsi", "Luar Pulau"
-            $table->string('tipe');               // 'dalam_provinsi', 'luar_provinsi', 'luar_pulau'
-            $table->decimal('harga_dasar', 10, 2); // 15000, 25000, 45000
+            $table->string('nama_zona');
+            $table->string('tipe');
+            $table->decimal('harga_dasar', 10, 2);
             $table->decimal('harga_per_500gr', 10, 2)->default(2000);
+            $table->integer('estimasi_hari_base')->default(2);
+            $table->integer('estimasi_hari_base_max')->default(2);
+            $table->integer('estimasi_hari_min')->default(1);
+            $table->integer('estimasi_hari_min_max')->default(1);
             $table->timestamps();
         });
 
         Schema::create('shipping_options', function (Blueprint $table) {
             $table->id('option_id');
-            $table->integer('estimasi_hari');       // 1, 2, 3
-            $table->string('label');                // "Express (1 Hari)", dst
-            $table->decimal('persen_tambahan', 5, 2)->default(0); // 0, 25, 50
+            $table->string('label');
+            $table->integer('kurang_hari')->default(0);
+            $table->decimal('persen_tambahan', 5, 2)->default(0);
             $table->timestamps();
         });
 
+        // Tambah foreign key ke orders setelah shipping_zones & shipping_options sudah ada
         Schema::table('orders', function (Blueprint $table) {
-            $table->unsignedBigInteger('zone_id')->nullable()->after('ongkir');
-            $table->unsignedBigInteger('shipping_option_id')->nullable()->after('zone_id');
-            $table->integer('estimasi_hari')->nullable()->after('shipping_option_id');
-            $table->date('estimasi_tiba')->nullable()->after('estimasi_hari');
-            $table->decimal('berat_total_gram', 10, 2)->nullable()->after('estimasi_tiba');
+            $table->foreign('zone_id')
+                ->references('zone_id')
+                ->on('shipping_zones')
+                ->nullOnDelete();
 
-            $table->foreign('zone_id')->references('zone_id')->on('shipping_zones')->nullOnDelete();
-            $table->foreign('shipping_option_id')->references('option_id')->on('shipping_options')->nullOnDelete();
+            $table->foreign('shipping_option_id')
+                ->references('option_id')
+                ->on('shipping_options')
+                ->nullOnDelete();
         });
     }
 
@@ -42,7 +48,6 @@ return new class extends Migration
         Schema::table('orders', function (Blueprint $table) {
             $table->dropForeign(['zone_id']);
             $table->dropForeign(['shipping_option_id']);
-            $table->dropColumn(['zone_id', 'shipping_option_id', 'estimasi_hari', 'estimasi_tiba', 'berat_total_gram']);
         });
 
         Schema::dropIfExists('shipping_options');

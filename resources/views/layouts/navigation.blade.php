@@ -337,13 +337,11 @@
             display: none;
         }
 
-        .mp-topbar-right {
-            display: none;
-        }
-
         .mp-nav-inner {
-            padding: 0 16px;
-            gap: 12px;
+            padding: 0 14px;
+            height: 56px;
+            gap: 0;
+            justify-content: space-between;
         }
 
         .mp-nav-links {
@@ -351,7 +349,151 @@
         }
 
         .mp-search-wrap {
-            padding: 0 8px;
+            display: none;
+        }
+
+        .mp-cart-btn {
+            display: none;
+        }
+
+        .mp-nav-divider {
+            display: none;
+        }
+
+        .mp-logo {
+            font-size: 18px;
+            gap: 6px;
+            margin-right: 0 !important;
+        }
+
+        .mp-logo-icon {
+            padding: 5px;
+        }
+
+        .mp-logo-icon svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .mp-nav-right {
+            gap: 0;
+        }
+
+        .mp-avatar-btn {
+            width: 34px;
+            height: 34px;
+        }
+
+        /* ===== FIX DROPDOWN MOBILE ===== */
+        /* Override Jetstream dropdown supaya tidak overflow layar */
+        .mp-nav [x-data]>div[style*="position"],
+        .mp-nav [x-data]>div {
+            position: static !important;
+        }
+    }
+
+    /* ===== MOBILE BOTTOM NAV ===== */
+    .mp-bottom-nav {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border-top: 1px solid #e2e8f0;
+        z-index: 100;
+        padding: 6px 0 env(safe-area-inset-bottom, 6px);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .mp-bottom-nav-inner {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    .mp-bottom-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        padding: 4px 12px;
+        text-decoration: none;
+        color: #94a3b8;
+        font-size: 10px;
+        font-weight: 600;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        border-radius: 10px;
+        transition: all .18s;
+        position: relative;
+        min-width: 56px;
+    }
+
+    .mp-bottom-nav-item.active {
+        color: #1d4ed8;
+    }
+
+    .mp-bottom-nav-item svg {
+        width: 22px;
+        height: 22px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .mp-bottom-nav-badge {
+        position: absolute;
+        top: 2px;
+        right: 10px;
+        background: #ef4444;
+        color: #fff;
+        font-size: 9px;
+        font-weight: 800;
+        border-radius: 9999px;
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1.5px solid #fff;
+    }
+
+    /* Beri padding bawah pada body supaya konten tidak tertutup bottom nav */
+    body.has-bottom-nav {
+        padding-bottom: 68px;
+    }
+
+    @media (max-width: 768px) {
+        .mp-bottom-nav {
+            display: block;
+        }
+    }
+
+    .mp-dropdown-content {
+        width: 300px;
+    }
+
+    @media (max-width: 768px) {
+
+        /* Dropdown muncul dari kanan, lebar penuh dikurangi margin */
+        .mp-dropdown-content {
+            width: min(300px, calc(100vw - 24px));
+        }
+
+        /* Pastikan dropdown container tidak overflow */
+        .mp-nav-right {
+            position: relative;
+        }
+
+        /* Fix x-dropdown positioning di mobile */
+        .mp-nav .absolute {
+            right: 0 !important;
+            left: auto !important;
+            max-width: calc(100vw - 24px);
         }
     }
 </style>
@@ -456,21 +598,112 @@
         {{-- SEARCH BAR --}}
         @if (Request::is('/') || (Auth::check() && Auth::user()->role === 'pembeli' && Request::is('dashboard')))
             <div class="mp-search-wrap">
-                <div class="mp-search-form">
+                <div class="mp-search-form" id="search-wrapper" style="position:relative;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                     <form action="{{ auth()->check() ? route('dashboard') : route('home') }}" method="GET"
                         style="display:contents;">
-                        <input type="text" name="search" value="{{ request('search') }}"
-                            placeholder="Mau cari barang apa hari ini?">
+                        <input type="text" name="search" id="search-input" value="{{ request('search') }}"
+                            placeholder="Mau cari barang apa hari ini?" autocomplete="off">
                     </form>
+                    <div id="search-dropdown"
+                        style="
+                display:none;
+                position:absolute;
+                top:calc(100% + 8px);
+                left:0;
+                right:0;
+                background:#fff;
+                border:1px solid #e2e8f0;
+                border-radius:12px;
+                box-shadow:0 8px 32px rgba(30,64,175,0.15);
+                z-index:9999;
+                overflow:hidden;
+            ">
+                    </div>
                 </div>
             </div>
         @else
             <div style="flex:1;"></div>
         @endif
+
+        <script>
+            (function() {
+                const input = document.getElementById('search-input');
+                const dropdown = document.getElementById('search-dropdown');
+                if (!input || !dropdown) return;
+
+                let timer;
+
+                input.addEventListener('input', function() {
+                    clearTimeout(timer);
+                    const q = this.value.trim();
+
+                    if (q.length === 0) {
+                        dropdown.style.display = 'none';
+                        return;
+                    }
+
+                    timer = setTimeout(async () => {
+                        try {
+                            const res = await fetch(
+                                `{{ route('search.suggestions') }}?q=${encodeURIComponent(q)}`);
+                            const data = await res.json();
+
+                            if (data.length === 0) {
+                                dropdown.innerHTML = `
+                        <div style="padding:16px;text-align:center;font-size:13px;color:#94a3b8;font-family:'Plus Jakarta Sans',sans-serif;">
+                            Produk tidak ditemukan
+                        </div>`;
+                                dropdown.style.display = 'block';
+                                return;
+                            }
+
+                            dropdown.innerHTML = data.map(p => `
+                    <a href="{{ auth()->check() ? route('dashboard') : route('home') }}?search=${encodeURIComponent(p.nama_produk)}"style="
+                        display:flex;
+                        align-items:center;
+                        gap:12px;
+                        padding:10px 14px;
+                        text-decoration:none;
+                        color:#1e293b;
+                        font-size:13px;
+                        font-family:'Plus Jakarta Sans',sans-serif;
+                        border-bottom:1px solid #f1f5f9;
+                        transition:background .15s;
+                        background:#fff;
+                    " onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#fff'">
+                        <img src="{{ asset('storage') }}/${p.foto_produk}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1px solid #e2e8f0;" onerror="this.style.display='none'"/>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-weight:600;color:#1e3a8a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.nama_produk}</div>
+                            <div style="font-size:12px;color:#3b82f6;font-weight:700;margin-top:2px;">Rp ${Number(p.harga).toLocaleString('id-ID')}</div>
+                        </div>
+                        <svg style="width:14px;height:14px;flex-shrink:0;stroke:#cbd5e1;fill:none;stroke-width:2;" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                `).join('');
+
+                            dropdown.style.display = 'block';
+                        } catch (e) {
+                            dropdown.style.display = 'none';
+                        }
+                    }, 250);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!document.getElementById('search-wrapper').contains(e.target)) {
+                        dropdown.style.display = 'none';
+                    }
+                });
+
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') dropdown.style.display = 'none';
+                });
+            })();
+        </script>
 
         {{-- RIGHT SECTION --}}
         <div class="mp-nav-right">
@@ -500,7 +733,7 @@
                         </button>
                     </x-slot>
                     <x-slot name="content">
-                        <div style="width:300px; font-family:'Plus Jakarta Sans',sans-serif;">
+                        <div class="mp-dropdown-content" style="font-family:'Plus Jakarta Sans',sans-serif;">
 
                             {{-- Header dropdown --}}
                             <div
@@ -617,6 +850,115 @@
                 <a href="{{ route('register') }}" class="mp-btn-daftar">Daftar</a>
             @endauth
         </div>
-
     </div>
+    {{-- ===== MOBILE BOTTOM NAVIGATION ===== --}}
+    <div class="mp-bottom-nav" id="mp-bottom-nav">
+        <div class="mp-bottom-nav-inner">
+            @auth
+                @if (auth()->user()->role === 'admin')
+                    <a href="{{ route('dashboard') }}"
+                        class="mp-bottom-nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Dashboard
+                    </a>
+                    <a href="{{ route('products.index') }}"
+                        class="mp-bottom-nav-item {{ request()->routeIs('products.*') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        Produk
+                    </a>
+                    <a href="{{ route('orders.index') }}"
+                        class="mp-bottom-nav-item {{ request()->routeIs('orders.*') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        Pesanan
+                    </a>
+                    <a href="{{ route('categories.index') }}"
+                        class="mp-bottom-nav-item {{ request()->routeIs('categories.*') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        Kategori
+                    </a>
+                    <a href="{{ route('admin.users.index') }}"
+                        class="mp-bottom-nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        Users
+                    </a>
+                @elseif (auth()->user()->role === 'pembeli')
+                    <a href="{{ route('dashboard') }}"
+                        class="mp-bottom-nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                        Beranda
+                    </a>
+                    <a href="{{ route('cart.index') }}"
+                        class="mp-bottom-nav-item {{ request()->routeIs('cart.*') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        @if (($cartCount ?? 0) > 0)
+                            <span class="mp-bottom-nav-badge">{{ $cartCount }}</span>
+                        @endif
+                        Keranjang
+                    </a>
+                    <a href="{{ route('orders.history') }}"
+                        class="mp-bottom-nav-item {{ request()->routeIs('orders.history') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        Pesanan
+                    </a>
+                    <a href="{{ route('profile.edit') }}"
+                        class="mp-bottom-nav-item {{ request()->routeIs('profile.*') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        Akun
+                    </a>
+                @endif
+            @else
+                <a href="{{ route('home') }}" class="mp-bottom-nav-item active">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Beranda
+                </a>
+                <a href="{{ route('login') }}" class="mp-bottom-nav-item">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    Masuk
+                </a>
+                <a href="{{ route('register') }}" class="mp-bottom-nav-item">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                    Daftar
+                </a>
+            @endauth
+        </div>
+    </div>
+
+    <script>
+        if (window.innerWidth <= 768) {
+            document.body.classList.add('has-bottom-nav');
+        }
+    </script>
 </nav>

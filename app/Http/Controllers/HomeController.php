@@ -35,38 +35,101 @@ class HomeController extends Controller
         if ($user->role === 'admin') {
             $validStatuses = ['dibayar', 'dikemas', 'dikirim', 'selesai'];
 
-            $totalCuanAdmin   = Order::whereIn('status', $validStatuses)->count() * 2500;
-            $pendapatanProduk = Order::whereIn('status', $validStatuses)->sum('total_harga');
-            $totalOngkir      = Order::whereIn('status', $validStatuses)->sum('ongkir');
-            $totalPembeli     = User::where('role', 'pembeli')
-                ->whereNotNull('last_login_at')
-                ->count();
+            $filterBulan = $request->input('bulan'); // format: 2025-10
+            $filterTahun = $request->input('tahun'); // format: 2025
 
-            $grafikData = collect();
-            for ($i = 6; $i >= 0; $i--) {
-                $bulan = now()->subMonths($i);
-                $pendapatan = Order::whereIn('status', $validStatuses)
-                    ->whereYear('created_at', $bulan->year)
-                    ->whereMonth('created_at', $bulan->month)
-                    ->sum('total_harga');
+            $orderQuery = Order::whereIn('status', $validStatuses);
 
-                $adminFee = Order::whereIn('status', $validStatuses)
-                    ->whereYear('created_at', $bulan->year)
-                    ->whereMonth('created_at', $bulan->month)
-                    ->count() * 2500;
-
-                $grafikData->push([
-                    'bulan'      => $bulan->translatedFormat('M Y'),
-                    'pendapatan' => (int) $pendapatan,
-                    'admin_fee'  => (int) $adminFee,
-                ]);
+            if ($filterBulan) {
+                [$thn, $bln] = explode('-', $filterBulan);
+                $orderQuery->whereYear('created_at', $thn)->whereMonth('created_at', $bln);
+            } elseif ($filterTahun) {
+                $orderQuery->whereYear('created_at', $filterTahun);
             }
 
-            $orderTerbaru = Order::with(['user', 'items.product'])
-                ->whereIn('status', $validStatuses)
-                ->latest()
-                ->take(5)
-                ->get();
+            $totalCuanAdmin   = (clone $orderQuery)->count() * 2500;
+            $pendapatanProduk = (clone $orderQuery)->sum('total_harga');
+            $totalOngkir      = (clone $orderQuery)->sum('ongkir');
+            $totalPembeli     = User::where('role', 'pembeli')->whereNotNull('last_login_at')->count();
+
+            $grafikData = collect();
+
+            if ($filterBulan) {
+                // Per hari dalam bulan yang dipilih
+                [$thn, $bln] = explode('-', $filterBulan);
+                $jumlahHari = \Carbon\Carbon::createFromDate($thn, $bln, 1)->daysInMonth;
+                for ($d = 1; $d <= $jumlahHari; $d++) {
+                    $tgl = \Carbon\Carbon::createFromDate($thn, $bln, $d);
+                    $pendapatan = Order::whereIn('status', $validStatuses)
+                        ->whereDate('created_at', $tgl->toDateString())
+                        ->sum('total_harga');
+                    $adminFee = Order::whereIn('status', $validStatuses)
+                        ->whereDate('created_at', $tgl->toDateString())
+                        ->count() * 2500;
+                    $grafikData->push([
+                        'bulan'      => $tgl->format('d'),
+                        'pendapatan' => (int) $pendapatan,
+                        'admin_fee'  => (int) $adminFee,
+                    ]);
+                }
+            } elseif ($filterTahun) {
+                // Per bulan dalam tahun yang dipilih
+                for ($m = 1; $m <= 12; $m++) {
+                    $bulan = \Carbon\Carbon::createFromDate($filterTahun, $m, 1);
+                    $pendapatan = Order::whereIn('status', $validStatuses)
+                        ->whereYear('created_at', $filterTahun)
+                        ->whereMonth('created_at', $m)
+                        ->sum('total_harga');
+                    $adminFee = Order::whereIn('status', $validStatuses)
+                        ->whereYear('created_at', $filterTahun)
+                        ->whereMonth('created_at', $m)
+                        ->count() * 2500;
+                    $grafikData->push([
+                        'bulan'      => $bulan->translatedFormat('M'),
+                        'pendapatan' => (int) $pendapatan,
+                        'admin_fee'  => (int) $adminFee,
+                    ]);
+                }
+            } else {
+                // Default: 7 bulan terakhir (kode lama)
+                for ($i = 2; $i >= 0; $i--) {
+                    $bulan = now()->subMonths($i);
+                    $pendapatan = Order::whereIn('status', $validStatuses)
+                        ->whereYear('created_at', $bulan->year)
+                        ->whereMonth('created_at', $bulan->month)
+                        ->sum('total_harga');
+                    $adminFee = Order::whereIn('status', $validStatuses)
+                        ->whereYear('created_at', $bulan->year)
+                        ->whereMonth('created_at', $bulan->month)
+                        ->count() * 2500;
+                    $grafikData->push([
+                        'bulan'      => $bulan->translatedFormat('M Y'),
+                        'pendapatan' => (int) $pendapatan,
+                        'admin_fee'  => (int) $adminFee,
+                    ]);
+                }
+            }
+
+            // Siapkan opsi dropdown (tahun sejak order pertama s/d sekarang)
+            $tahunTersedia = Order::selectRaw('YEAR(created_at) as tahun')
+                ->groupBy('tahun')
+                ->orderByDesc('tahun')
+                ->pluck('tahun');
+
+            $bulanTersedia = collect();
+            foreach ($tahunTersedia as $thn) {
+                $bulanDalamTahun = Order::whereYear('created_at', $thn)
+                    ->selectRaw('MONTH(created_at) as bulan')
+                    ->groupBy('bulan')
+                    ->orderBy('bulan')
+                    ->pluck('bulan');
+                foreach ($bulanDalamTahun as $bln) {
+                    $bulanTersedia->push([
+                        'value' => $thn . '-' . str_pad($bln, 2, '0', STR_PAD_LEFT),
+                        'label' => \Carbon\Carbon::createFromDate($thn, $bln, 1)->translatedFormat('F Y'),
+                    ]);
+                }
+            }
 
             return view('dashboard.admin', compact(
                 'totalCuanAdmin',
@@ -74,7 +137,10 @@ class HomeController extends Controller
                 'totalOngkir',
                 'totalPembeli',
                 'grafikData',
-                'orderTerbaru',
+                'tahunTersedia',
+                'bulanTersedia',
+                'filterBulan',
+                'filterTahun',
             ));
         }
 

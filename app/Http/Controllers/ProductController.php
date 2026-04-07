@@ -344,4 +344,29 @@ class ProductController extends Controller
 
         return back()->with('success', 'Stok ' . $variant->nama_varian . ' berkurang dari ' . $stokLama . ' → ' . $stokBaru . '!');
     }
+
+    public function suggestions(Request $request)
+    {
+        $query = $request->get('q', '');
+
+        if (strlen($query) < 1) {
+            return response()->json([]);
+        }
+
+        $products = \App\Models\Product::with('primaryImage')
+            ->where('nama_produk', 'LIKE', "%{$query}%")
+            ->select('product_id', 'nama_produk', 'harga')
+            ->limit(6)
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'product_id' => $p->product_id,
+                    'nama_produk' => $p->nama_produk,
+                    'harga' => $p->harga,
+                    'foto_produk' => $p->primaryImage ? $p->primaryImage->gambar : null,
+                ];
+            });
+
+        return response()->json($products);
+    }
 }

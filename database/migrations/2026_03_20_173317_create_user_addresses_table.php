@@ -11,8 +11,7 @@ return new class extends Migration
         Schema::create('user_addresses', function (Blueprint $table) {
             $table->id('address_id');
             $table->unsignedBigInteger('user_id');
-            $table->foreign('user_id')->references('user_id')->on('users')->cascadeOnDelete();
-            $table->string('label');            // "Rumah", "Kantor", dll
+            $table->string('label');
             $table->string('nama_penerima');
             $table->string('no_telp');
             $table->text('alamat');
@@ -22,6 +21,11 @@ return new class extends Migration
             $table->string('village_id');
             $table->boolean('is_default')->default(false);
             $table->timestamps();
+
+            $table->foreign('user_id')
+                ->references('user_id')
+                ->on('users')
+                ->cascadeOnDelete();
         });
     }
 
