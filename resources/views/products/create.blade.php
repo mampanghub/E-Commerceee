@@ -10,41 +10,56 @@
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-2xl">
                 <div class="p-8">
 
-                    @if(session('error'))
+                    @if (session('error'))
                         <div class="bg-red-100 text-red-700 p-4 rounded-xl mb-4">{{ session('error') }}</div>
                     @endif
-                    @if($errors->any())
+                    @if ($errors->any())
                         <div class="bg-red-100 text-red-700 p-4 rounded-xl mb-4">
-                            <ul>@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+                            <ul>
+                                @foreach ($errors->all() as $e)
+                                    <li>{{ $e }}</li>
+                                @endforeach
+                            </ul>
                         </div>
                     @endif
 
-                    <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+                    <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data"
+                        class="space-y-6">
                         @csrf
 
                         {{-- INFO DASAR --}}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="col-span-1 md:col-span-2">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Produk <span class="text-red-500">*</span></label>
-                                <input type="text" name="nama_produk" class="w-full border border-gray-300 rounded-xl px-4 py-3" placeholder="Masukkan nama produk" required>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Produk <span
+                                        class="text-red-500">*</span></label>
+                                <input type="text" name="nama_produk"
+                                    class="w-full border border-gray-300 rounded-xl px-4 py-3"
+                                    placeholder="Masukkan nama produk" required>
                             </div>
 
                             <div class="col-span-1">
-                                <label class="block text-sm font-semibold text-gray-700 mb-1">Harga Dasar (Rp) <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Harga Dasar (Rp) <span
+                                        class="text-red-500">*</span></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <span class="text-gray-500 text-sm">Rp</span>
                                     </div>
-                                    <input type="number" name="harga" class="pl-10 w-full border border-gray-300 rounded-xl px-4 py-3" placeholder="0" required>
+                                    <input type="text" id="harga-display" inputmode="numeric"
+                                        class="pl-10 w-full border border-gray-300 rounded-xl px-4 py-3" placeholder="0"
+                                        autocomplete="off">
+                                    <input type="hidden" name="harga" id="harga-hidden">
                                 </div>
                             </div>
 
                             <div class="col-span-1">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Kategori <span class="text-red-500">*</span></label>
-                                <select id="category-select" name="category_id" onchange="toggleVariants()" class="w-full border border-gray-300 rounded-xl px-4 py-3" required>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Kategori <span
+                                        class="text-red-500">*</span></label>
+                                <select id="category-select" name="category_id" onchange="toggleVariants()"
+                                    class="w-full border border-gray-300 rounded-xl px-4 py-3" required>
                                     <option value="">-- Pilih Kategori --</option>
                                     @foreach ($categories as $cat)
-                                        <option value="{{ $cat->category_id }}" data-nama="{{ strtolower($cat->nama_kategori) }}">
+                                        <option value="{{ $cat->category_id }}"
+                                            data-nama="{{ strtolower($cat->nama_kategori) }}">
                                             {{ $cat->nama_kategori }}
                                         </option>
                                     @endforeach
@@ -54,7 +69,8 @@
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Deskripsi Produk</label>
-                            <textarea name="deskripsi" rows="3" class="w-full border border-gray-300 rounded-xl px-4 py-3" placeholder="Masukkan deskripsi produk"></textarea>
+                            <textarea name="deskripsi" rows="3" class="w-full border border-gray-300 rounded-xl px-4 py-3"
+                                placeholder="Masukkan deskripsi produk"></textarea>
                         </div>
 
                         {{-- VARIAN --}}
@@ -64,7 +80,9 @@
                                     <h4 class="font-bold text-gray-800">Pengaturan Varian & Stok</h4>
                                     <p class="text-xs text-gray-400 mt-1">Tentukan berat spesifik untuk tiap varian.</p>
                                 </div>
-                                <button type="button" onclick="addVariantRow()" class="text-sm bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl font-bold hover:bg-indigo-100">+ Tambah Varian</button>
+                                <button type="button" onclick="addVariantRow()"
+                                    class="text-sm bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl font-bold hover:bg-indigo-100">+
+                                    Tambah Varian</button>
                             </div>
                             <div id="variant-list" class="space-y-3"></div>
                         </div>
@@ -72,15 +90,21 @@
                         {{-- FOTO --}}
                         <div class="border-t border-gray-100 pt-6">
                             <div class="flex justify-between items-center mb-3">
-                                <label class="block text-sm font-semibold text-gray-700">Upload Foto & Tag Varian</label>
-                                <span class="text-xs text-gray-400">Pilih varian dari dropdown — otomatis ngikutin yang lo isi di atas</span>
+                                <label class="block text-sm font-semibold text-gray-700">Upload Foto & Tag
+                                    Varian</label>
+                                <span class="text-xs text-gray-400">Pilih varian dari dropdown — otomatis ngikutin yang
+                                    lo isi di atas</span>
                             </div>
                             <div id="image-upload-container" class="space-y-3"></div>
-                            <button type="button" onclick="addImageRow()" class="mt-3 text-xs font-bold text-blue-600 hover:text-blue-800">+ Tambah Foto Lain</button>
+                            <button type="button" onclick="addImageRow()"
+                                class="mt-3 text-xs font-bold text-blue-600 hover:text-blue-800">+ Tambah Foto
+                                Lain</button>
                         </div>
 
                         <div class="flex justify-end pt-8">
-                            <button type="submit" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md font-bold">Simpan Produk</button>
+                            <button type="submit"
+                                class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md font-bold">Simpan
+                                Produk</button>
                         </div>
                     </form>
                 </div>
@@ -158,9 +182,9 @@
                 const checked = new Set(
                     [...group.querySelectorAll('input[type=checkbox]:checked')].map(cb => cb.value)
                 );
-                group.innerHTML = names.length === 0
-                    ? '<span class="text-xs text-gray-400 italic">Isi nama varian dulu di atas</span>'
-                    : names.map(n => `
+                group.innerHTML = names.length === 0 ?
+                    '<span class="text-xs text-gray-400 italic">Isi nama varian dulu di atas</span>' :
+                    names.map(n => `
                         <label class="flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
                             <input type="checkbox"
                                 name="image_tags[${rowIdx}][]"
@@ -175,17 +199,17 @@
         function buildImageRow(isFirst = false) {
             const idx = imageRowIdx++;
             const names = getVarianNames();
-            const checkboxesHtml = names.length === 0
-                ? '<span class="text-xs text-gray-400 italic">Isi nama varian dulu di atas</span>'
-                : names.map(n => `
+            const checkboxesHtml = names.length === 0 ?
+                '<span class="text-xs text-gray-400 italic">Isi nama varian dulu di atas</span>' :
+                names.map(n => `
                     <label class="flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
                         <input type="checkbox" name="image_tags[${idx}][]" value="${n}" class="rounded">
                         <span class="text-sm text-gray-700">${n}</span>
                     </label>`).join('');
 
-            const removeBtn = isFirst
-                ? ''
-                : `<button type="button" onclick="this.closest('.image-row').remove()" class="text-red-400 hover:text-red-600 text-xl font-bold leading-none self-start pt-1 flex-shrink-0">&times;</button>`;
+            const removeBtn = isFirst ?
+                '' :
+                `<button type="button" onclick="this.closest('.image-row').remove()" class="text-red-400 hover:text-red-600 text-xl font-bold leading-none self-start pt-1 flex-shrink-0">&times;</button>`;
 
             return `
             <div class="image-row ${isFirst ? 'bg-blue-50/50 border-blue-100' : 'bg-gray-50 border-gray-100'} p-4 rounded-xl border space-y-3">
@@ -246,10 +270,39 @@
         // ============================================================
         // Init — jalankan pas halaman pertama load
         // ============================================================
-        document.addEventListener('DOMContentLoaded', function () {
-            addVariantRow("", "", "", 1000);  // 1 varian kosong
+        document.addEventListener('DOMContentLoaded', function() {
+            addVariantRow("", "", "", 1000); // 1 varian kosong
             const container = document.getElementById('image-upload-container');
             container.insertAdjacentHTML('beforeend', buildImageRow(true)); // 1 foto row pertama
         });
+
+        // ============================================================
+        // FORMAT HARGA — titik ribuan otomatis
+        // ============================================================
+        function formatRibuan(val) {
+            return val.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+
+        function initHargaInput() {
+            const displayInput = document.getElementById('harga-display');
+            const hiddenInput = document.getElementById('harga-hidden');
+            if (!displayInput || !hiddenInput) return;
+
+            displayInput.addEventListener('input', function() {
+                const raw = this.value.replace(/\./g, '');
+                hiddenInput.value = raw;
+                this.value = formatRibuan(this.value);
+            });
+
+            displayInput.addEventListener('keydown', function(e) {
+                // Boleh: angka, backspace, delete, arrow, tab
+                const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+                if (!/^\d$/.test(e.key) && !allowed.includes(e.key)) {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initHargaInput);
     </script>
 </x-app-layout>

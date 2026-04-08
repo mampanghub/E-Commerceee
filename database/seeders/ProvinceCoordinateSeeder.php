@@ -46,8 +46,12 @@ class ProvinceCoordinateSeeder extends Seeder
             ['province_code' => '76', 'province_name' => 'Sulawesi Barat',                 'latitude' =>  -2.840011, 'longitude' => 119.232143],
             ['province_code' => '81', 'province_name' => 'Maluku',                         'latitude' =>  -3.238945, 'longitude' => 130.145313],
             ['province_code' => '82', 'province_name' => 'Maluku Utara',                   'latitude' =>   1.570773, 'longitude' => 127.808024],
-            ['province_code' => '91', 'province_name' => 'Papua Barat',                    'latitude' =>  -1.336290, 'longitude' => 133.174689],
-            ['province_code' => '94', 'province_name' => 'Papua',                          'latitude' =>  -4.269928, 'longitude' => 138.080353],
+            ['province_code' => '91', 'province_name' => 'Papua',                          'latitude' =>  -4.269928, 'longitude' => 138.080353],
+            ['province_code' => '92', 'province_name' => 'Papua Barat',                    'latitude' =>  -1.336290, 'longitude' => 133.174689],
+            ['province_code' => '93', 'province_name' => 'Papua Selatan',                  'latitude' =>  -6.989654, 'longitude' => 139.916496],
+            ['province_code' => '94', 'province_name' => 'Papua Tengah',                   'latitude' =>  -3.994870, 'longitude' => 136.382854],
+            ['province_code' => '95', 'province_name' => 'Papua Pegunungan',               'latitude' =>  -4.269444, 'longitude' => 139.498600],
+            ['province_code' => '96', 'province_name' => 'Papua Barat Daya',               'latitude' =>  -1.238365, 'longitude' => 131.954000],
         ];
 
         DB::table('province_coordinates')->upsert(

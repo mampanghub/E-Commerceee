@@ -459,9 +459,21 @@ class OrderController extends Controller
             ->firstOrFail();
 
         if ($order->status === 'dikirim') {
-            $order->update(['status' => 'selesai']);
-            $firstItem = $order->items->first();
+            DB::transaction(function () use ($order) {
+                // Cegah double-increment kalau kurir juga konfirmasi
+                $fresh = Order::where('order_id', $order->order_id)->lockForUpdate()->first();
+                if ($fresh->status === 'selesai') return;
 
+                $order->update(['status' => 'selesai']);
+
+                // Bayar ongkir ke kurir
+                if ($order->kurir_id) {
+                    \App\Models\User::where('user_id', $order->kurir_id)
+                        ->increment('saldo', $order->ongkir);
+                }
+            });
+
+            $firstItem = $order->items->first();
             return redirect()->route('orders.history')
                 ->with('show_review_popup', true)
                 ->with('review_order_id', $order->order_id)

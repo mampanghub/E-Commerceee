@@ -7,13 +7,15 @@
         <div class="max-w-xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow-xl sm:rounded-2xl p-8">
 
-                @if(session('error'))
+                @if (session('error'))
                     <div class="bg-red-100 text-red-700 px-4 py-3 rounded-xl mb-4">{{ session('error') }}</div>
                 @endif
-                @if($errors->any())
+                @if ($errors->any())
                     <div class="bg-red-100 text-red-700 px-4 py-3 rounded-xl mb-4">
                         <ul class="list-disc list-inside">
-                            @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
+                            @foreach ($errors->all() as $e)
+                                <li>{{ $e }}</li>
+                            @endforeach
                         </ul>
                     </div>
                 @endif
@@ -36,7 +38,8 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">No. Telepon</label>
                         <input type="text" name="no_telp" value="{{ old('no_telp') }}"
-                            class="w-full border border-gray-300 rounded-xl px-4 py-3">
+                            class="w-full border border-gray-300 rounded-xl px-4 py-3" inputmode="numeric"
+                            pattern="[0-9+\-\s]*" oninput="this.value = this.value.replace(/[^0-9+\-\s]/g, '')">
                     </div>
 
                     <div>
@@ -52,7 +55,8 @@
                     </div>
 
                     <div class="flex justify-between items-center pt-4">
-                        <a href="{{ route('admin.users.index') }}" class="text-gray-500 hover:underline text-sm">← Kembali</a>
+                        <a href="{{ route('admin.users.index') }}" class="text-gray-500 hover:underline text-sm">←
+                            Kembali</a>
                         <button type="submit"
                             class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold">
                             Buat Akun Kurir

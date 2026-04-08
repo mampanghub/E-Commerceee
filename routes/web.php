@@ -13,6 +13,7 @@ use App\Http\Controllers\KurirController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\ShippingSettingController;
+use App\Http\Controllers\Auth\GoogleController;
 use Illuminate\Http\Request;
 
 // ================= HALAMAN AWAL (SEMUA BISA AKSES) =================
@@ -108,5 +109,8 @@ Route::middleware(['auth', 'role:kurir'])->prefix('kurir')->name('kurir.')->grou
 
 Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/search/suggestions', [ProductController::class, 'suggestions'])->name('search.suggestions');
+
+Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('auth.google');
+Route::get('/auth/google/callback', [GoogleController::class, 'callback']);
 
 require __DIR__ . '/auth.php';
