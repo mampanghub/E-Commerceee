@@ -26,16 +26,19 @@ class StoreSeeder extends Seeder
         }
 
         DB::table('stores')->insert([
-            'user_id'     => $admin->user_id,
-            'nama_toko'   => 'Mampang Pedia',
-            'deskripsi'   => 'Toko resmi Mampang Pedia. Menjual berbagai produk pilihan dengan harga terbaik.',
-            'province_id' => '32', // Jawa Barat (Depok)
-            'status'      => 'active',
-            'saldo'       => 0,
-            'created_at'  => now(),
-            'updated_at'  => now(),
-        ]);
-
+    'user_id'     => $admin->user_id,
+    'nama_toko'   => 'Mampang Pedia',
+    'deskripsi'   => 'Toko resmi Mampang Pedia. Menjual berbagai produk pilihan dengan harga terbaik.',
+    'province_id' => 32,
+    'city_id'     => 3276,   // Kota Depok
+    'district_id' => 3276010, // sesuaikan dengan data di tabel districts
+    'village_id'  => '3276010001', // sesuaikan dengan data di tabel villages
+    'alamat'      => 'Jl. Margonda Raya, Depok, Jawa Barat',
+    'status'      => 'active',
+    'saldo'       => 0,
+    'created_at'  => now(),
+    'updated_at'  => now(),
+]);
         $this->command->info('Store admin berhasil dibuat!');
     }
 }

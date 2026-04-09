@@ -48,13 +48,13 @@ class OrderController extends Controller
             $beratGram
         );
 
-        $biayaAdmin       = 2500;
-        $zone             = $shippingData['zone'];
-        $opsiOngkir       = $shippingData['options'];
+        $biayaAdmin = 2500;
+        $zone = $shippingData['zone'];
+        $opsiOngkir = $shippingData['options'];
         $selectedOptionId = $request->input('shipping_option_id', $opsiOngkir[0]['option_id']);
-        $selectedOpsi     = collect($opsiOngkir)->firstWhere('option_id', $selectedOptionId) ?? $opsiOngkir[0];
-        $ongkir           = $selectedOpsi['ongkir'];
-        $totalAkhir       = $totalProduk + $ongkir + $biayaAdmin;
+        $selectedOpsi = collect($opsiOngkir)->firstWhere('option_id', $selectedOptionId) ?? $opsiOngkir[0];
+        $ongkir = $selectedOpsi['ongkir'];
+        $totalAkhir = $totalProduk + $ongkir + $biayaAdmin;
 
         return view('checkout.review', compact(
             'items',
@@ -114,45 +114,45 @@ class OrderController extends Controller
                 $beratGram
             );
             $ongkir = $this->shippingService->hitungOngkirFinal($ongkirDasar, $shippingOption);
-            $totalAkhir  = $totalProduk + $ongkir + $biayaAdmin;
+            $totalAkhir = $totalProduk + $ongkir + $biayaAdmin;
 
             [$estimasiMin, $estimasiMax] = app(\App\Services\ShippingService::class)
                 ->hitungEstimasiRange($zone, $shippingOption);
 
-            $estimasiTiba    = now()->addDays($estimasiMin)->toDateString();
+            $estimasiTiba = now()->addDays($estimasiMin)->toDateString();
             $estimasiTibaMax = now()->addDays($estimasiMax)->toDateString();
 
             \Cache::put("pending_order_{$user->user_id}", [
-                'user_id'            => $user->user_id,
-                'items'              => $itemsToProcess,
-                'ongkir'             => $ongkir,
-                'total_harga'        => $totalAkhir,
-                'zone_id'            => $zone->zone_id,
+                'user_id' => $user->user_id,
+                'items' => $itemsToProcess,
+                'ongkir' => $ongkir,
+                'total_harga' => $totalAkhir,
+                'zone_id' => $zone->zone_id,
                 'shipping_option_id' => $shippingOption->option_id,
-                'estimasi_hari'      => $estimasiMin,
-                'estimasi_tiba'      => $estimasiTiba,
-                'estimasi_tiba_max'  => $estimasiTibaMax,
-                'berat_total_gram'   => $beratGram,
-                'address_id'         => $selectedAddress->address_id,
-                'shipping_address'   => $selectedAddress->alamat_lengkap,
-                'nama_penerima'      => $selectedAddress->nama_penerima,
-                'no_telp_penerima'   => $selectedAddress->no_telp,
-                'catatan'            => $request->input('catatan', ''),
-                'from_cart'          => !$request->has('product_id'),
+                'estimasi_hari' => $estimasiMin,
+                'estimasi_tiba' => $estimasiTiba,
+                'estimasi_tiba_max' => $estimasiTibaMax,
+                'berat_total_gram' => $beratGram,
+                'address_id' => $selectedAddress->address_id,
+                'shipping_address' => $selectedAddress->alamat_lengkap,
+                'nama_penerima' => $selectedAddress->nama_penerima,
+                'no_telp_penerima' => $selectedAddress->no_telp,
+                'catatan' => $request->input('catatan', ''),
+                'from_cart' => !$request->has('product_id'),
             ], now()->addHours(2));
 
-            Config::$serverKey    = config('midtrans.server_key');
+            Config::$serverKey = config('midtrans.server_key');
             Config::$isProduction = config('midtrans.is_production', false);
 
             $tempOrderId = 'TMP-' . $user->user_id . '-' . time();
-            $snapToken   = Snap::getSnapToken([
+            $snapToken = Snap::getSnapToken([
                 'transaction_details' => [
-                    'order_id'     => $tempOrderId,
+                    'order_id' => $tempOrderId,
                     'gross_amount' => (int) $totalAkhir,
                 ],
                 'customer_details' => [
                     'first_name' => $user->name,
-                    'email'      => $user->email,
+                    'email' => $user->email,
                 ],
             ]);
 
@@ -166,7 +166,7 @@ class OrderController extends Controller
                 (string) $selectedAddress->province_id,  // ← benar
                 $beratGram
             );
-            $opsiOngkir      = $shippingData['options'];
+            $opsiOngkir = $shippingData['options'];
             $selectedOptionId = $shippingOption->option_id;
 
             $addresses = \App\Models\UserAddress::where('user_id', $user->user_id)
@@ -201,73 +201,79 @@ class OrderController extends Controller
     public function callback(Request $request)
     {
         $serverKey = config('midtrans.server_key');
-        $hashed    = hash('sha512', $request->order_id . $request->status_code . $request->gross_amount . $serverKey);
+        $hashed = hash('sha512', $request->order_id . $request->status_code . $request->gross_amount . $serverKey);
 
         if ($hashed !== $request->signature_key) {
             return response()->json(['message' => 'Invalid signature'], 403);
         }
 
         if (in_array($request->transaction_status, ['capture', 'settlement'])) {
-            $parts  = explode('-', $request->order_id); // TMP-{user_id}-{timestamp}
+            $parts = explode('-', $request->order_id); // TMP-{user_id}-{timestamp}
             $userId = $parts[1] ?? null;
 
-            if (!$userId) return response()->json(['message' => 'Invalid order'], 400);
+            if (!$userId)
+                return response()->json(['message' => 'Invalid order'], 400);
 
             $pending = \Cache::get("pending_order_{$userId}");
-            if (!$pending) return response()->json(['message' => 'Pending order not found'], 404);
+            if (!$pending)
+                return response()->json(['message' => 'Pending order not found'], 404);
 
             DB::transaction(function () use ($request, $pending) {
                 $order = Order::create([
-                    'user_id'            => $pending['user_id'],
-                    'total_harga'        => $pending['total_harga'],
-                    'ongkir'             => $pending['ongkir'],
-                    'status'             => 'dibayar',
-                    'zone_id'            => $pending['zone_id'],
+                    'user_id' => $pending['user_id'],
+                    'total_harga' => $pending['total_harga'],
+                    'ongkir' => $pending['ongkir'],
+                    'status' => 'dibayar',
+                    'zone_id' => $pending['zone_id'],
                     'shipping_option_id' => $pending['shipping_option_id'],
-                    'estimasi_hari'      => $pending['estimasi_hari'],
-                    'estimasi_tiba'      => $pending['estimasi_tiba'],
-                    'estimasi_tiba_max'  => $pending['estimasi_tiba_max'] ?? $pending['estimasi_tiba'],
-                    'berat_total_gram'   => $pending['berat_total_gram'],
-                    'shipping_address'   => $pending['shipping_address'] ?? null,
-                    'nama_penerima'      => $pending['nama_penerima'] ?? null,
-                    'no_telp_penerima'   => $pending['no_telp_penerima'] ?? null,
-                    'catatan'            => $pending['catatan'] ?? null,
+                    'estimasi_hari' => $pending['estimasi_hari'],
+                    'estimasi_tiba' => $pending['estimasi_tiba'],
+                    'estimasi_tiba_max' => $pending['estimasi_tiba_max'] ?? $pending['estimasi_tiba'],
+                    'berat_total_gram' => $pending['berat_total_gram'],
+                    'shipping_address' => $pending['shipping_address'] ?? null,
+                    'nama_penerima' => $pending['nama_penerima'] ?? null,
+                    'no_telp_penerima' => $pending['no_telp_penerima'] ?? null,
+                    'catatan' => $pending['catatan'] ?? null,
                 ]);
 
                 foreach ($pending['items'] as $item) {
                     OrderItem::create([
-                        'order_id'   => $order->order_id,
+                        'order_id' => $order->order_id,
                         'product_id' => $item['product_id'],
                         'variant_id' => $item['variant_id'],
-                        'jumlah'     => $item['jumlah'],
-                        'harga'      => $item['harga'],
+                        'jumlah' => $item['jumlah'],
+                        'harga' => $item['harga'],
                     ]);
 
-                    $model   = $item['variant_id']
+                    $model = $item['variant_id']
                         ? ProductVariant::find($item['variant_id'])
                         : Product::find($item['product_id']);
                     $stokLama = $model->stok;
                     $model->update(['stok' => $stokLama - $item['jumlah']]);
                     \App\Models\StockLog::create([
                         'variant_id' => $item['variant_id'],
-                        'stok_lama'  => $stokLama,
-                        'stok_baru'  => $stokLama - $item['jumlah'],
-                        'jumlah'     => $item['jumlah'],
-                        'tipe'       => 'keluar',
+                        'stok_lama' => $stokLama,
+                        'stok_baru' => $stokLama - $item['jumlah'],
+                        'jumlah' => $item['jumlah'],
+                        'tipe' => 'keluar',
                         'keterangan' => 'Terjual - Order #' . $order->order_id,
                     ]);
                 }
 
                 \App\Models\Payment::create([
-                    'order_id'           => $order->order_id,
-                    'metode_pembayaran'  => $request->payment_type ?? 'unknown',
-                    'status'             => 'berhasil',
+                    'order_id' => $order->order_id,
+                    'metode_pembayaran' => $request->payment_type ?? 'unknown',
+                    'status' => 'berhasil',
                 ]);
 
                 if ($pending['from_cart']) {
                     $cart = Cart::where('user_id', $pending['user_id'])->first();
                     $cart?->items()->delete();
                 }
+                
+                $order->load(['user', 'items.product', 'items.variant', 'payment', 'shippingZone', 'shippingOption']);
+                \Illuminate\Support\Facades\Mail::to($order->user->email)
+                    ->queue(new \App\Mail\InvoiceMail($order));
 
                 \Cache::forget("pending_order_{$pending['user_id']}");
             });
@@ -294,13 +300,13 @@ class OrderController extends Controller
             'kurir',
         ])->findOrFail($id);
 
-        \Midtrans\Config::$serverKey    = config('midtrans.server_key');
+        \Midtrans\Config::$serverKey = config('midtrans.server_key');
         \Midtrans\Config::$isProduction = config('midtrans.is_production', false);
 
         if ($order->status == 'menunggu') {
             try {
                 $statusMidtrans = \Midtrans\Transaction::status($order->order_id);
-                $transaction    = $statusMidtrans->transaction_status;
+                $transaction = $statusMidtrans->transaction_status;
                 if (in_array($transaction, ['settlement', 'capture'])) {
                     $order->update(['status' => 'dibayar']);
                 } elseif (in_array($transaction, ['deny', 'expire', 'cancel'])) {
@@ -356,7 +362,8 @@ class OrderController extends Controller
     // ─────────────────────────────────────────────
     public function index()
     {
-        if (auth()->user()->role !== 'admin') abort(403);
+        if (auth()->user()->role !== 'admin')
+            abort(403);
 
         $status = request('status', 'semua');
 
@@ -406,7 +413,7 @@ class OrderController extends Controller
         }
 
         $order->update([
-            'status'     => $request->status,
+            'status' => $request->status,
             'nama_kurir' => $request->nama_kurir ?? $order->nama_kurir,
             'nomor_resi' => $request->nomor_resi ?? $order->nomor_resi,
         ]);
@@ -427,15 +434,15 @@ class OrderController extends Controller
 
         DB::transaction(function () use ($order) {
             foreach ($order->items as $item) {
-                $model    = $item->variant_id ? $item->variant : $item->product;
+                $model = $item->variant_id ? $item->variant : $item->product;
                 $stokLama = $model->stok;
                 $model->update(['stok' => $stokLama + $item->jumlah]);
                 \App\Models\StockLog::create([
                     'variant_id' => $item->variant_id,
-                    'stok_lama'  => $stokLama,
-                    'stok_baru'  => $stokLama + $item->jumlah,
-                    'jumlah'     => $item->jumlah,
-                    'tipe'       => 'masuk',
+                    'stok_lama' => $stokLama,
+                    'stok_baru' => $stokLama + $item->jumlah,
+                    'jumlah' => $item->jumlah,
+                    'tipe' => 'masuk',
                     'keterangan' => 'Batal - Order #' . $order->order_id,
                 ]);
             }
@@ -462,7 +469,8 @@ class OrderController extends Controller
             DB::transaction(function () use ($order) {
                 // Cegah double-increment kalau kurir juga konfirmasi
                 $fresh = Order::where('order_id', $order->order_id)->lockForUpdate()->first();
-                if ($fresh->status === 'selesai') return;
+                if ($fresh->status === 'selesai')
+                    return;
 
                 $order->update(['status' => 'selesai']);
 
@@ -515,7 +523,8 @@ class OrderController extends Controller
                 ->where('user_id', $user->user_id)
                 ->with(['province', 'city', 'district', 'village'])
                 ->first();
-            if ($addr) return $addr;
+            if ($addr)
+                return $addr;
         }
         return \App\Models\UserAddress::where('user_id', $user->user_id)
             ->where('is_default', true)
@@ -528,17 +537,17 @@ class OrderController extends Controller
     // ─────────────────────────────────────────────
     private function resolveItems(Request $request, $user, bool $withProcess = false): array
     {
-        $items          = [];
+        $items = [];
         $itemsToProcess = [];
-        $totalProduk    = 0;
-        $beratGram      = 0;
+        $totalProduk = 0;
+        $beratGram = 0;
         $storeProvinceId = null;
 
         if ($request->has('product_id')) {
-            $product  = Product::with('store', 'images')->findOrFail($request->product_id);
-            $qty      = (int) $request->input('quantity', 1);
+            $product = Product::with('store', 'images')->findOrFail($request->product_id);
+            $qty = (int) $request->input('quantity', 1);
             $variantId = $request->input('variant_id');
-            $variant  = $variantId ? ProductVariant::findOrFail($variantId) : null;
+            $variant = $variantId ? ProductVariant::findOrFail($variantId) : null;
 
             $hargaSatuan = $product->harga + ($variant->harga_tambahan ?? 0);
 
@@ -546,14 +555,14 @@ class OrderController extends Controller
                 throw new Exception('Stok tidak mencukupi!');
             }
 
-            $beratGram       = ($variant->berat ?? $product->berat ?? 250) * $qty;
+            $beratGram = ($variant->berat ?? $product->berat ?? 250) * $qty;
             $storeProvinceId = $product->store->province_id;
-            $totalProduk     = $hargaSatuan * $qty;
+            $totalProduk = $hargaSatuan * $qty;
 
             $fotoVarian = $product->images->where('variant_id', $variantId)->first();
-            $gambar     = $fotoVarian?->gambar ?? $product->primaryImage?->gambar;
+            $gambar = $fotoVarian?->gambar ?? $product->primaryImage?->gambar;
 
-            $items[]          = compact('product', 'variant', 'qty', 'hargaSatuan', 'gambar') + ['jumlah' => $qty, 'harga' => $hargaSatuan, 'subtotal' => $hargaSatuan * $qty];
+            $items[] = compact('product', 'variant', 'qty', 'hargaSatuan', 'gambar') + ['jumlah' => $qty, 'harga' => $hargaSatuan, 'subtotal' => $hargaSatuan * $qty];
             $itemsToProcess[] = ['product_id' => $product->product_id, 'variant_id' => $variantId, 'jumlah' => $qty, 'harga' => $hargaSatuan];
         } else {
             $cart = Cart::with('items.product.store', 'items.product.images', 'items.product.primaryImage', 'items.variant')
@@ -564,7 +573,7 @@ class OrderController extends Controller
             }
 
             $selectedIds = $request->input('selected_items', []);
-            $cartItems   = $selectedIds ? $cart->items->whereIn('cart_item_id', $selectedIds) : $cart->items;
+            $cartItems = $selectedIds ? $cart->items->whereIn('cart_item_id', $selectedIds) : $cart->items;
 
             if ($cartItems->isEmpty()) {
                 throw new Exception('Pilih minimal satu barang dulu!');
@@ -575,16 +584,16 @@ class OrderController extends Controller
             foreach ($cartItems as $item) {
                 $itemHarga = $item->product->harga + ($item->variant->harga_tambahan ?? 0);
                 $totalProduk += $itemHarga * $item->jumlah;
-                $beratGram   += ($item->variant->berat ?? $item->product->berat ?? 250) * $item->jumlah;
+                $beratGram += ($item->variant->berat ?? $item->product->berat ?? 250) * $item->jumlah;
 
                 if ($withProcess && ($item->variant ?? $item->product)->stok < $item->jumlah) {
                     throw new Exception("Stok {$item->product->nama_produk} habis!");
                 }
 
                 $fotoVarian = $item->product->images->where('variant_id', $item->variant_id)->first();
-                $gambar     = $fotoVarian?->gambar ?? $item->product->primaryImage?->gambar;
+                $gambar = $fotoVarian?->gambar ?? $item->product->primaryImage?->gambar;
 
-                $items[]          = ['product' => $item->product, 'variant' => $item->variant, 'jumlah' => $item->jumlah, 'harga' => $itemHarga, 'subtotal' => $itemHarga * $item->jumlah, 'gambar' => $gambar];
+                $items[] = ['product' => $item->product, 'variant' => $item->variant, 'jumlah' => $item->jumlah, 'harga' => $itemHarga, 'subtotal' => $itemHarga * $item->jumlah, 'gambar' => $gambar];
                 $itemsToProcess[] = ['product_id' => $item->product_id, 'variant_id' => $item->variant_id, 'jumlah' => $item->jumlah, 'harga' => $itemHarga];
             }
         }
