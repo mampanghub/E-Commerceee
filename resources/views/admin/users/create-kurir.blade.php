@@ -1,11 +1,16 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Buat Akun Kurir</h2>
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-[10px] font-black uppercase tracking-widest text-orange-500 mb-1">Admin Panel</p>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Buat Akun Kurir</h1>
+            </div>
+        </div>
     </x-slot>
 
     <div class="py-8">
         <div class="max-w-xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white shadow-xl sm:rounded-2xl p-8">
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
 
                 @if (session('error'))
                     <div class="bg-red-100 text-red-700 px-4 py-3 rounded-xl mb-4">{{ session('error') }}</div>
@@ -58,7 +63,7 @@
                         <a href="{{ route('admin.users.index') }}" class="text-gray-500 hover:underline text-sm">←
                             Kembali</a>
                         <button type="submit"
-                            class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold">
+                            class="px-8 py-3 bg-blue-600 text-white rounded-2xl font-black hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">
                             Buat Akun Kurir
                         </button>
                     </div>

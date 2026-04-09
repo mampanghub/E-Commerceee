@@ -94,7 +94,7 @@
             {{-- NOTIF STOK --}}
             @php
                 $stokRendah = \App\Models\ProductVariant::with('product')
-                    ->where('stok', '<', 10)
+                    ->where('stok', '<', 5)
                     ->orderBy('stok', 'asc')
                     ->get();
             @endphp
@@ -114,15 +114,9 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
                         @foreach ($stokRendah as $variant)
                             @php
-                                if ($variant->stok < 5) {
-                                    $color = 'bg-rose-50 border-rose-100';
-                                    $badge = 'bg-rose-100 text-rose-700';
-                                    $dot = 'bg-rose-500';
-                                } else {
-                                    $color = 'bg-amber-50 border-amber-100';
-                                    $badge = 'bg-amber-100 text-amber-700';
-                                    $dot = 'bg-amber-500';
-                                }
+                                $color = 'bg-rose-50 border-rose-100';
+                                $badge = 'bg-rose-100 text-rose-700';
+                                $dot = 'bg-rose-500';
                             @endphp
                             <a href="{{ route('products.edit', $variant->product_id) }}"
                                 class="flex items-center justify-between px-4 py-3 rounded-2xl border {{ $color }} hover:opacity-80 transition-all">

@@ -29,24 +29,16 @@
                                 $order->status,
                             ];
 
-                            // Helper untuk format range tanggal
                             $formatRange = function ($min, $max) {
-                                if (!$min) {
-                                    return null;
-                                }
+                                if (!$min) return null;
                                 $tglMin = \Carbon\Carbon::parse($min);
                                 $tglMax = $max ? \Carbon\Carbon::parse($max) : null;
-                                if (!$tglMax || $tglMin->eq($tglMax)) {
-                                    return $tglMin->translatedFormat('d M Y');
-                                }
-                                if ($tglMin->month === $tglMax->month) {
-                                    return $tglMin->format('d') . ' - ' . $tglMax->translatedFormat('d M Y');
-                                }
+                                if (!$tglMax || $tglMin->eq($tglMax)) return $tglMin->translatedFormat('d M Y');
+                                if ($tglMin->month === $tglMax->month) return $tglMin->format('d') . ' - ' . $tglMax->translatedFormat('d M Y');
                                 return $tglMin->translatedFormat('d M') . ' - ' . $tglMax->translatedFormat('d M Y');
                             };
                         @endphp
-                        <span
-                            class="inline-flex items-center px-4 py-2 rounded-xl text-xs font-black border uppercase tracking-widest {{ $badgeClass }}">
+                        <span class="inline-flex items-center px-4 py-2 rounded-xl text-xs font-black border uppercase tracking-widest {{ $badgeClass }}">
                             <span class="w-1.5 h-1.5 rounded-full bg-current mr-2"></span>
                             {{ $statusLabel }}
                         </span>
@@ -63,8 +55,7 @@
 
                     {{-- TIMELINE --}}
                     <div class="bg-white rounded-3xl border border-slate-100 p-6">
-                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Status
-                            Pengiriman</p>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Status Pengiriman</p>
                         @php
                             $steps = [
                                 [
@@ -93,29 +84,22 @@
                         @foreach ($steps as $i => $step)
                             <div class="flex items-start gap-3">
                                 <div class="flex flex-col items-center">
-                                    <div
-                                        class="w-8 h-8 rounded-full flex items-center justify-center shrink-0
-                                    {{ $step['done'] ? ($i === count($steps) - 1 ? 'bg-emerald-500' : 'bg-blue-600') : 'bg-slate-100' }}">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0
+                                        {{ $step['done'] ? ($i === count($steps) - 1 ? 'bg-emerald-500' : 'bg-blue-600') : 'bg-slate-100' }}">
                                         @if ($step['done'])
-                                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                                    d="M5 13l4 4L19 7" />
+                                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
                                             </svg>
                                         @else
                                             <span class="w-2 h-2 rounded-full bg-slate-300"></span>
                                         @endif
                                     </div>
                                     @if ($i < count($steps) - 1)
-                                        <div
-                                            class="w-0.5 h-10 mt-1 {{ $steps[$i + 1]['done'] ? 'bg-blue-200' : 'bg-slate-100' }}">
-                                        </div>
+                                        <div class="w-0.5 h-10 mt-1 {{ $steps[$i + 1]['done'] ? 'bg-blue-200' : 'bg-slate-100' }}"></div>
                                     @endif
                                 </div>
                                 <div class="{{ $i < count($steps) - 1 ? 'pb-8' : '' }} flex-1">
-                                    <p
-                                        class="font-black text-sm {{ $step['done'] ? 'text-slate-800' : 'text-slate-300' }}">
-                                        {{ $step['label'] }}</p>
+                                    <p class="font-black text-sm {{ $step['done'] ? 'text-slate-800' : 'text-slate-300' }}">{{ $step['label'] }}</p>
                                     <p class="text-xs text-slate-400 mt-0.5">{{ $step['sub'] }}</p>
                                 </div>
                             </div>
@@ -124,55 +108,39 @@
 
                     {{-- INFO ESTIMASI & PENGIRIMAN --}}
                     <div class="bg-white rounded-3xl border border-slate-100 p-6">
-                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Info Pengiriman
-                        </p>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Info Pengiriman</p>
                         <div class="grid grid-cols-2 gap-3">
                             @if ($order->shippingOption)
                                 <div class="bg-indigo-50 rounded-2xl p-4">
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-1">
-                                        Kecepatan</p>
-                                    <p class="font-black text-slate-800 text-sm">{{ $order->shippingOption->label }}
-                                    </p>
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-1">Kecepatan</p>
+                                    <p class="font-black text-slate-800 text-sm">{{ $order->shippingOption->label }}</p>
                                 </div>
                             @endif
-
                             @if ($order->estimasi_tiba)
                                 <div class="bg-emerald-50 rounded-2xl p-4">
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-1">
-                                        Estimasi Tiba</p>
-                                    <p class="font-black text-slate-800 text-sm">
-                                        {{ $formatRange($order->estimasi_tiba, $order->estimasi_tiba_max) }}
-                                    </p>
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-1">Estimasi Tiba</p>
+                                    <p class="font-black text-slate-800 text-sm">{{ $formatRange($order->estimasi_tiba, $order->estimasi_tiba_max) }}</p>
                                 </div>
                             @endif
-
                             @if ($order->shippingZone)
                                 <div class="bg-blue-50 rounded-2xl p-4">
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1">Zona
-                                    </p>
-                                    <p class="font-black text-slate-800 text-sm">{{ $order->shippingZone->nama_zona }}
-                                    </p>
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1">Zona</p>
+                                    <p class="font-black text-slate-800 text-sm">{{ $order->shippingZone->nama_zona }}</p>
                                 </div>
                             @endif
-
                             @if ($order->berat_total_gram)
                                 <div class="bg-slate-50 rounded-2xl p-4">
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
-                                        Berat Total</p>
-                                    <p class="font-black text-slate-800 text-sm">
-                                        {{ number_format($order->berat_total_gram, 0, ',', '.') }} gram</p>
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Berat Total</p>
+                                    <p class="font-black text-slate-800 text-sm">{{ number_format($order->berat_total_gram, 0, ',', '.') }} gram</p>
                                 </div>
                             @endif
                         </div>
 
-                        {{-- Kurir yang diassign --}}
                         @if (in_array($order->status, ['dikirim', 'selesai']) && $order->nama_kurir)
                             <div class="mt-3 bg-blue-50 rounded-2xl p-4">
-                                <p class="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2">Kurir &
-                                    Resi</p>
+                                <p class="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2">Kurir & Resi</p>
                                 <div class="flex items-center gap-3">
-                                    <div
-                                        class="w-8 h-8 rounded-xl bg-blue-200 flex items-center justify-center text-blue-700 font-black text-sm shrink-0">
+                                    <div class="w-8 h-8 rounded-xl bg-blue-200 flex items-center justify-center text-blue-700 font-black text-sm shrink-0">
                                         {{ substr($order->nama_kurir, 0, 1) }}
                                     </div>
                                     <div>
@@ -182,8 +150,7 @@
                                     @if ($order->dikirim_at)
                                         <div class="ml-auto text-right">
                                             <p class="text-[10px] text-slate-400">Dikirim</p>
-                                            <p class="text-xs font-bold text-slate-600">
-                                                {{ $order->dikirim_at->format('d M') }}</p>
+                                            <p class="text-xs font-bold text-slate-600">{{ $order->dikirim_at->format('d M') }}</p>
                                         </div>
                                     @endif
                                 </div>
@@ -193,26 +160,18 @@
 
                     {{-- ALAMAT PENGIRIMAN --}}
                     <div class="bg-white rounded-3xl border border-slate-100 p-6">
-                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Alamat
-                            Pengiriman</p>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Alamat Pengiriman</p>
                         <div class="flex items-start gap-3">
                             <div class="w-10 h-10 bg-blue-50 rounded-2xl flex items-center justify-center shrink-0">
-                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
                             </div>
                             <div>
-                                <p class="font-black text-slate-900">{{ $order->nama_penerima ?? $order->user->name }}
-                                </p>
-                                <p class="text-sm text-blue-600 font-bold mt-0.5">
-                                    {{ $order->no_telp_penerima ?? ($order->user->no_telp ?? '-') }}</p>
-                                <p class="text-sm text-slate-500 mt-2 leading-relaxed">
-                                    {{ $order->shipping_address ?? '-' }}
-                                </p>
+                                <p class="font-black text-slate-900">{{ $order->nama_penerima ?? $order->user->name }}</p>
+                                <p class="text-sm text-blue-600 font-bold mt-0.5">{{ $order->no_telp_penerima ?? ($order->user->no_telp ?? '-') }}</p>
+                                <p class="text-sm text-slate-500 mt-2 leading-relaxed">{{ $order->shipping_address ?? '-' }}</p>
                             </div>
                         </div>
                     </div>
@@ -221,36 +180,27 @@
                     <div class="bg-white rounded-3xl border border-slate-100 p-6">
                         <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">
                             Produk Dipesan
-                            <span
-                                class="ml-2 px-2 py-0.5 bg-slate-100 text-slate-500 rounded-lg normal-case text-[10px]">{{ $order->items->count() }}
-                                item</span>
+                            <span class="ml-2 px-2 py-0.5 bg-slate-100 text-slate-500 rounded-lg normal-case text-[10px]">{{ $order->items->count() }} item</span>
                         </p>
                         <div class="space-y-4">
                             @foreach ($order->items as $item)
                                 @php
-                                    $gambar =
-                                        $item->product->images->where('variant_id', $item->variant_id)->first()
-                                            ?->gambar ?? $item->product->primaryImage?->gambar;
+                                    $gambar = $item->product->images->where('variant_id', $item->variant_id)->first()?->gambar ?? $item->product->primaryImage?->gambar;
                                 @endphp
                                 <div class="flex items-center gap-4">
                                     @if ($gambar)
-                                        <img src="{{ asset('storage/' . $gambar) }}"
-                                            class="w-14 h-14 rounded-2xl object-cover bg-slate-100 shrink-0">
+                                        <img src="{{ asset('storage/' . $gambar) }}" class="w-14 h-14 rounded-2xl object-cover bg-slate-100 shrink-0">
                                     @else
                                         <div class="w-14 h-14 rounded-2xl bg-slate-100 shrink-0"></div>
                                     @endif
                                     <div class="flex-1 min-w-0">
-                                        <p class="font-black text-slate-800 text-sm">{{ $item->product->nama_produk }}
-                                        </p>
+                                        <p class="font-black text-slate-800 text-sm">{{ $item->product->nama_produk }}</p>
                                         @if ($item->variant)
-                                            <p class="text-xs text-slate-400 mt-0.5">{{ $item->variant->nama_varian }}
-                                            </p>
+                                            <p class="text-xs text-slate-400 mt-0.5">{{ $item->variant->nama_varian }}</p>
                                         @endif
-                                        <p class="text-xs text-slate-400">{{ $item->jumlah }}x · Rp
-                                            {{ number_format($item->harga, 0, ',', '.') }}</p>
+                                        <p class="text-xs text-slate-400">{{ $item->jumlah }}x · Rp {{ number_format($item->harga, 0, ',', '.') }}</p>
                                     </div>
-                                    <p class="font-black text-slate-800 text-sm shrink-0">Rp
-                                        {{ number_format($item->harga * $item->jumlah, 0, ',', '.') }}</p>
+                                    <p class="font-black text-slate-800 text-sm shrink-0">Rp {{ number_format($item->harga * $item->jumlah, 0, ',', '.') }}</p>
                                 </div>
                             @endforeach
                         </div>
@@ -263,8 +213,7 @@
 
                     {{-- RINGKASAN BIAYA --}}
                     <div class="bg-white rounded-3xl border border-slate-100 p-6">
-                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Ringkasan Biaya
-                        </p>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Ringkasan Biaya</p>
                         @php
                             $biayaAdmin = 2500;
                             $subtotal = $order->total_harga - $biayaAdmin - $order->ongkir;
@@ -272,53 +221,42 @@
                         <div class="space-y-3 text-sm">
                             <div class="flex justify-between">
                                 <span class="text-slate-500">Subtotal</span>
-                                <span class="font-bold text-slate-800">Rp
-                                    {{ number_format($subtotal, 0, ',', '.') }}</span>
+                                <span class="font-bold text-slate-800">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-slate-500">
                                     Ongkir
                                     @if ($order->shippingOption && $order->shippingOption->persen_tambahan > 0)
-                                        <span
-                                            class="text-[10px] text-indigo-400">(+{{ $order->shippingOption->persen_tambahan }}%)</span>
+                                        <span class="text-[10px] text-indigo-400">(+{{ $order->shippingOption->persen_tambahan }}%)</span>
                                     @endif
                                 </span>
-                                <span class="font-bold text-slate-800">Rp
-                                    {{ number_format($order->ongkir, 0, ',', '.') }}</span>
+                                <span class="font-bold text-slate-800">Rp {{ number_format($order->ongkir, 0, ',', '.') }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-slate-500">Biaya Layanan</span>
-                                <span class="font-bold text-slate-800">Rp
-                                    {{ number_format($biayaAdmin, 0, ',', '.') }}</span>
+                                <span class="font-bold text-slate-800">Rp {{ number_format($biayaAdmin, 0, ',', '.') }}</span>
                             </div>
                             <hr class="border-slate-100">
                             <div class="flex justify-between">
                                 <span class="font-black text-slate-800">Total</span>
-                                <span class="font-black text-blue-600">Rp
-                                    {{ number_format($order->total_harga, 0, ',', '.') }}</span>
+                                <span class="font-black text-blue-600">Rp {{ number_format($order->total_harga, 0, ',', '.') }}</span>
                             </div>
                         </div>
                     </div>
 
                     {{-- METODE PEMBAYARAN --}}
                     <div class="bg-white rounded-3xl border border-slate-100 p-6">
-                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Metode
-                            Pembayaran</p>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Metode Pembayaran</p>
                         @if ($order->payment)
                             <div class="flex items-center gap-3">
-                                <div
-                                    class="w-10 h-10 bg-blue-50 rounded-2xl flex items-center justify-center shrink-0">
-                                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                <div class="w-10 h-10 bg-blue-50 rounded-2xl flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <p class="font-black text-slate-800 text-sm capitalize">
-                                        {{ str_replace('_', ' ', $order->payment->metode_pembayaran) }}</p>
-                                    <p class="text-xs text-slate-400">
-                                        {{ $order->payment->created_at->format('d M Y • H:i') }} WIB</p>
+                                    <p class="font-black text-slate-800 text-sm capitalize">{{ str_replace('_', ' ', $order->payment->metode_pembayaran) }}</p>
+                                    <p class="text-xs text-slate-400">{{ $order->payment->created_at->format('d M Y • H:i') }} WIB</p>
                                 </div>
                             </div>
                         @else
@@ -329,8 +267,7 @@
                     {{-- ADMIN: Proses Pengemasan --}}
                     @if (Auth::user()->role === 'admin' && $order->status === 'dibayar')
                         <div class="bg-white rounded-3xl border border-indigo-100 p-6">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Proses
-                                Pesanan</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Proses Pesanan</p>
                             <form action="{{ route('orders.update-status', $order->order_id) }}" method="POST">
                                 @csrf @method('PATCH')
                                 <input type="hidden" name="status" value="dikemas">
@@ -342,7 +279,7 @@
                         </div>
                     @endif
 
-                    {{-- ADMIN: Info Kurir (kurir ambil sendiri) --}}
+                    {{-- ADMIN: Info Kurir --}}
                     @if (Auth::user()->role === 'admin' && $order->status === 'dikemas')
                         <div class="bg-white rounded-3xl border border-orange-100 p-6">
                             <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Status Kurir</p>
@@ -375,12 +312,10 @@
                     {{-- PEMBELI: Batalkan --}}
                     @if ($order->user_id == Auth::id() && $order->status === 'dibayar')
                         <div class="bg-white rounded-3xl border border-rose-100 p-6">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Batalkan
-                                Pesanan</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Batalkan Pesanan</p>
                             <div class="bg-blue-50 rounded-2xl p-4 mb-4">
                                 <p class="text-xs text-blue-500 font-bold mb-1">Refund ke saldo (70%)</p>
-                                <p class="font-black text-blue-700 text-lg">Rp
-                                    {{ number_format($order->total_harga * 0.7, 0, ',', '.') }}</p>
+                                <p class="font-black text-blue-700 text-lg">Rp {{ number_format($order->total_harga * 0.7, 0, ',', '.') }}</p>
                                 <p class="text-xs text-slate-400 mt-1">Saldo langsung masuk setelah pembatalan.</p>
                             </div>
                             <form action="{{ route('orders.cancel', $order->order_id) }}" method="POST">
@@ -408,6 +343,12 @@
                         <div class="bg-emerald-50 border border-emerald-100 rounded-3xl p-5 text-center">
                             <p class="font-black text-emerald-700 text-sm">✓ Transaksi Selesai</p>
                             <p class="text-xs text-emerald-500 mt-1">Terima kasih sudah berbelanja!</p>
+                            @if($order->foto_konfirmasi)
+                                <button onclick="document.getElementById('modal-foto').classList.remove('hidden')"
+                                    class="mt-3 w-full py-2.5 bg-emerald-600 text-white text-xs font-black rounded-2xl hover:bg-emerald-700 transition-all">
+                                    📷 Lihat Bukti Konfirmasi
+                                </button>
+                            @endif
                         </div>
                     @elseif($order->status === 'batal')
                         <div class="bg-rose-50 border border-rose-100 rounded-3xl p-5 text-center">
@@ -420,4 +361,33 @@
             </div>
         </div>
     </div>
+
+    {{-- MODAL FOTO KONFIRMASI --}}
+    @if($order->foto_konfirmasi)
+    <div id="modal-foto" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+        onclick="this.classList.add('hidden')">
+        <div class="bg-white rounded-3xl overflow-hidden max-w-lg w-full shadow-2xl" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                <p class="font-black text-slate-800 text-sm">Bukti Konfirmasi Pengiriman</p>
+                <button onclick="document.getElementById('modal-foto').classList.add('hidden')"
+                    class="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center hover:bg-slate-200 transition-all">
+                    <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <img src="{{ Storage::url($order->foto_konfirmasi) }}"
+                class="w-full object-cover max-h-96" alt="Bukti konfirmasi">
+            <div class="px-6 py-4 flex items-center gap-2">
+                <div class="w-6 h-6 bg-emerald-100 rounded-lg flex items-center justify-center shrink-0">
+                    <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+                <p class="text-xs font-bold text-emerald-600">Paket telah diterima dan dikonfirmasi oleh kurir</p>
+            </div>
+        </div>
+    </div>
+    @endif
+
 </x-app-layout>

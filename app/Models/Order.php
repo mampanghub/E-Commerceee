@@ -29,6 +29,8 @@ class Order extends Model
         'estimasi_tiba',
         'estimasi_tiba_max',
         'berat_total_gram',
+        'foto_konfirmasi',  // ← tambah ini
+        'dikirim_at',
     ];
 
     protected $casts = [

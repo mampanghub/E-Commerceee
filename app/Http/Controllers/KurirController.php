@@ -14,18 +14,16 @@ class KurirController extends Controller
     {
         $tab = request('tab', 'tersedia');
 
-        // Order yang sudah diambil kurir ini (dikemas_kurir / dikirim)
         $aktif = Order::where('kurir_id', Auth::id())
             ->whereIn('status', ['dikemas', 'dikirim'])
-            ->with(['items.product.primaryImage', 'items.variant', 'shippingOption'])
+            ->with(['items.product.primaryImage', 'items.product.images', 'items.variant', 'shippingOption']) // tambah images
             ->orderByRaw("FIELD(status, 'dikemas', 'dikirim')")
             ->orderBy('updated_at', 'asc')
             ->get();
 
-        // HANYA order yang sudah dikemas admin tapi belum diambil kurir manapun
         $tersedia = Order::where('status', 'dikemas')
             ->whereNull('kurir_id')
-            ->with(['items.product.primaryImage', 'items.variant', 'shippingOption'])
+            ->with(['items.product.primaryImage', 'items.product.images', 'items.variant', 'shippingOption']) // tambah images
             ->orderBy('updated_at', 'asc')
             ->get();
 
@@ -43,14 +41,19 @@ class KurirController extends Controller
         $order = Order::where('order_id', $id)
             ->where(function ($q) {
                 $q->where('kurir_id', Auth::id())
-                  ->orWhere(function ($q2) {
-                      // Bisa lihat detail order dikemas yang belum diambil siapapun
-                      $q2->where('status', 'dikemas')->whereNull('kurir_id');
-                  });
+                    ->orWhere(function ($q2) {
+                        $q2->where('status', 'dikemas')->whereNull('kurir_id');
+                    });
             })
             ->with([
-                'user.province', 'user.city', 'user.district', 'user.village',
-                'items.product.primaryImage', 'items.variant', 'shippingOption',
+                'user.province',
+                'user.city',
+                'user.district',
+                'user.village',
+                'items.product.primaryImage',
+                'items.product.images', // tambah images
+                'items.variant',
+                'shippingOption',
             ])
             ->firstOrFail();
 
@@ -62,20 +65,25 @@ class KurirController extends Controller
         try {
             DB::transaction(function () use ($id) {
                 $order = Order::where('order_id', $id)
-                    ->where('status', 'dikemas')   // ← hanya yang sudah dikemas admin
+                    ->where('status', 'dikemas')
                     ->whereNull('kurir_id')
                     ->lockForUpdate()
                     ->firstOrFail();
 
+                $resiPrefix = strtoupper(substr(Auth::user()->name, 0, 3));
+                $nomorResi  = $resiPrefix . Auth::id() . $order->order_id . time();
+
                 $order->update([
                     'kurir_id'   => Auth::id(),
                     'nama_kurir' => Auth::user()->name,
+                    'status'     => 'dikirim',
+                    'nomor_resi' => $nomorResi,
+                    'dikirim_at' => now(),
                 ]);
             });
 
             return redirect()->route('kurir.index', ['tab' => 'aktif'])
-                ->with('success', "Paket #$id berhasil kamu ambil! Segera dikemas dan kirim ya 📦");
-
+                ->with('success', "Paket #$id berhasil diambil! Resi sudah digenerate, segera antar ya 🚀");
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return redirect()->route('kurir.index', ['tab' => 'tersedia'])
                 ->with('error', "Paket #$id sudah diambil kurir lain. Cari paket lainnya!");
@@ -115,11 +123,10 @@ class KurirController extends Controller
             ]);
             $fotoPath = $request->file('foto_konfirmasi')->store('konfirmasi-pengiriman', 'public');
             DB::transaction(function () use ($order, $fotoPath) {
-                // Lock row — cegah double-increment jika pembeli konfirmasi duluan
                 $fresh = Order::where('order_id', $order->order_id)->lockForUpdate()->first();
                 if ($fresh->status === 'selesai') return;
 
-                $order->update(['status' => 'selesai', 'foto_konfirmasi' => $fotoPath]);
+                $fresh->update(['status' => 'selesai', 'foto_konfirmasi' => $fotoPath]);
                 Auth::user()->increment('saldo', $order->ongkir);
             });
             return back()->with('success', "Order #{$order->order_id} selesai! Ongkir Rp " . number_format($order->ongkir, 0, ',', '.') . " masuk ke saldo kamu.");

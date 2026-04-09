@@ -7,10 +7,11 @@
                 </div>
             </div>
         @endif
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Edit Produk: {{ $product->nama_produk }}
-            </h2>
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-[10px] font-black uppercase tracking-widest text-blue-500 mb-1">Admin Panel</p>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Edit: {{ $product->nama_produk }}</h1>
+            </div>
         </div>
     </x-slot>
 

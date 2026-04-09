@@ -1,7 +1,16 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Tambah Produk Baru</h2>
+        <div class="flex items-center gap-4">
+            <a href="{{ route('products.index') }}"
+                class="p-2.5 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all">
+                <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
+            <div>
+                <p class="text-[10px] font-black uppercase tracking-widest text-blue-500 mb-1">Admin Panel</p>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Tambah Produk Baru</h1>
+            </div>
         </div>
     </x-slot>
 

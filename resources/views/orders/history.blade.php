@@ -23,7 +23,7 @@
             @endif
 
             {{-- TAB NAVIGATION --}}
-            <div class="flex gap-1.5 bg-white border border-slate-100 p-1.5 rounded-2xl shadow-sm mb-6 overflow-x-auto">
+            <div class="flex gap-0 border-b border-slate-200 -mb-px mb-6">
                 @php
                     $tabs = [
                         'semua' => ['label' => 'Semua', 'count' => array_sum($counts)],
@@ -33,25 +33,17 @@
                         'selesai' => ['label' => 'Selesai', 'count' => $counts['selesai']],
                     ];
                     $activeTab = request('tab', 'dibayar');
-                    $tabStyles = [
-                        'semua' => 'bg-slate-800 text-white shadow',
-                        'dibayar' => 'bg-blue-600 text-white shadow',
-                        'dikemas' => 'bg-indigo-600 text-white shadow',
-                        'dikirim' => 'bg-violet-600 text-white shadow',
-                        'selesai' => 'bg-emerald-600 text-white shadow',
-                        'batal' => 'bg-rose-500 text-white shadow',
-                    ];
                 @endphp
 
                 @foreach ($tabs as $key => $tab)
                     <a href="{{ route('orders.history', ['tab' => $key]) }}"
-                        class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all duration-200
-                            {{ $activeTab === $key ? $tabStyles[$key] : 'text-slate-400 hover:text-slate-700' }}">
+                        class="flex items-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-widest border-b-2 transition-all
+                {{ $activeTab === $key ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
                         {{ $tab['label'] }}
                         @if ($tab['count'] > 0)
                             <span
-                                class="px-1.5 py-0.5 rounded-lg text-[10px] font-black
-                                        {{ $activeTab === $key ? 'bg-white/20' : 'bg-slate-100 text-slate-500' }}">
+                                class="text-[10px] font-black px-1.5 py-0.5 rounded-md
+                    {{ $activeTab === $key ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500' }}">
                                 {{ $tab['count'] }}
                             </span>
                         @endif
@@ -263,12 +255,12 @@
             </p>
             <div id="swal-stars" style="display:flex;justify-content:center;gap:8px;margin-bottom:8px;">
                 ${[1,2,3,4,5].map(i => `
-                            <svg data-val="${i}" class="swal-star"
-                                style="width:40px;height:40px;color:#e5e7eb;cursor:pointer;transition:color .15s;"
-                                fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                            </svg>
-                        `).join('')}
+                                    <svg data-val="${i}" class="swal-star"
+                                        style="width:40px;height:40px;color:#e5e7eb;cursor:pointer;transition:color .15s;"
+                                        fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                `).join('')}
             </div>
             <p id="swal-star-label" style="font-size:12px;color:#94a3b8;margin-bottom:12px;">
                 Pilih bintang dulu

@@ -1,6 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-bold text-2xl text-gray-900 tracking-tight">👤 Profil Saya</h2>
+        <div>
+            <p class="text-[10px] font-black uppercase tracking-widest text-blue-500 mb-1">Akun Saya</p>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Profil Saya</h1>
+        </div>
     </x-slot>
 
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 pt-6">
@@ -34,7 +37,7 @@
                 </div>
             @endif
 
-            <div class="bg-white shadow-xl sm:rounded-[2rem] border border-gray-100 p-8">
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
                 <form method="post" action="{{ route('profile.update') }}" class="space-y-6">
                     @csrf
                     @method('patch')
@@ -135,7 +138,7 @@
 
                     <div class="pt-4">
                         <button type="submit"
-                            class="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-all active:scale-95">
+                            class="px-8 py-3 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 active:scale-95">
                             Simpan Perubahan
                         </button>
                     </div>
