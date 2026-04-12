@@ -1,4 +1,10 @@
 <x-app-layout>
+    <style>
+        @media print {
+            nav, header, footer, .no-print { display: none !important; }
+            body { background: white !important; }
+        }
+    </style>
     <div class="min-h-screen bg-slate-50">
 
         {{-- HEADER --}}
@@ -263,6 +269,42 @@
                             <p class="text-sm text-slate-400 font-semibold italic">Belum ada pembayaran</p>
                         @endif
                     </div>
+
+                    {{-- NOMOR RESI (tampil saat dikirim/selesai, untuk semua role) --}}
+                    @if (in_array($order->status, ['dikirim', 'selesai']) && $order->nomor_resi)
+                        <div class="bg-white rounded-3xl border border-violet-100 p-6">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Nomor Resi</p>
+                            <div class="bg-violet-50 rounded-2xl p-4 flex items-center gap-3">
+                                <div class="w-10 h-10 bg-violet-100 rounded-2xl flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-violet-400 mb-1">{{ $order->nama_kurir }}</p>
+                                    <p class="font-mono font-black text-slate-800 text-sm break-all">{{ $order->nomor_resi }}</p>
+                                </div>
+                                <button onclick="navigator.clipboard.writeText('{{ $order->nomor_resi }}').then(() => this.innerText = '✓').catch(() => {}); setTimeout(() => this.innerText = 'Copy', 1500)"
+                                    class="shrink-0 px-3 py-1.5 bg-violet-600 text-white text-[10px] font-black rounded-xl hover:bg-violet-700 transition-all">
+                                    Copy
+                                </button>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- ADMIN: Cetak Resi (hanya saat dibayar) --}}
+                    @if (Auth::user()->role === 'admin' && $order->status === 'dibayar')
+                        <div id="cetak-resi" class="bg-white rounded-3xl border border-indigo-100 p-6">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Cetak Resi Pengiriman</p>
+                            <div class="bg-indigo-50 rounded-2xl p-4 mb-4 text-xs text-indigo-600 font-semibold">
+                                Resi dicetak sebelum pesanan diproses. Setelah status berubah, cetak resi tidak tersedia di sini.
+                            </div>
+                            <a href="{{ route('orders.cetak-resi', $order->order_id) }}" target="_blank"
+    class="w-full py-3 bg-indigo-600 text-white text-sm font-black rounded-2xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">
+    🖨️ Cetak Resi
+</a>
+                        </div>
+                    @endif
 
                     {{-- ADMIN: Proses Pengemasan --}}
                     @if (Auth::user()->role === 'admin' && $order->status === 'dibayar')

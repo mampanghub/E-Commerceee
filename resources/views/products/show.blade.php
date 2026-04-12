@@ -63,23 +63,55 @@
         .pd-btn-cart:hover { background: #F5F2EC; }
 
         .pd-qty-btn:hover { background: #F5F2EC; }
+
+        /* RESPONSIVE GRID */
+        .pd-product-grid {
+            display: grid;
+            grid-template-columns: 1.05fr 1fr;
+        }
+        @media (max-width: 768px) {
+            .pd-product-grid {
+                grid-template-columns: 1fr !important;
+            }
+            .pd-gallery {
+                border-radius: 28px 28px 0 0 !important;
+                padding: 20px !important;
+            }
+            .pd-detail {
+                border-left: none !important;
+                border-top: 1px solid #EBEBEB !important;
+                padding: 24px 20px !important;
+            }
+            .pd-title {
+                font-size: 22px !important;
+            }
+            .pd-price-val {
+                font-size: 20px !important;
+            }
+            .pd-cta-row {
+                flex-direction: column !important;
+            }
+            .pd-cta-row button {
+                width: 100% !important;
+            }
+        }
     </style>
 
     @if (session('success'))
-        <div class="max-w-5xl mx-auto mt-4 px-6">
+        <div class="max-w-5xl mx-auto mt-4 px-4 sm:px-6">
             <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl text-sm font-semibold">{{ session('success') }}</div>
         </div>
     @endif
     @if (session('error'))
-        <div class="max-w-5xl mx-auto mt-4 px-6">
+        <div class="max-w-5xl mx-auto mt-4 px-4 sm:px-6">
             <div class="p-4 bg-red-50 border border-red-200 text-red-600 rounded-2xl text-sm font-semibold">{{ session('error') }}</div>
         </div>
     @endif
 
-    <div class="pd-page" style="background:#FAFAF8; min-height:100vh; padding:28px 20px 64px;">
+    <div class="pd-page" style="background:#FAFAF8; min-height:100vh; padding:20px 16px 64px;">
 
         {{-- BREADCRUMB --}}
-        <div class="max-w-5xl mx-auto mb-6 flex items-center gap-2 text-xs font-medium" style="color:#AAA;">
+        <div class="max-w-5xl mx-auto mb-5 flex items-center gap-2 text-xs font-medium" style="color:#AAA; flex-wrap:wrap;">
             <a href="{{ route('dashboard') }}" class="flex items-center gap-1.5 font-bold hover:opacity-70 transition-opacity" style="color:#1C1C1C;">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
@@ -99,11 +131,11 @@
             maxStock: {{ $hasVariants ? 0 : $product->stok }},
             price: {{ $hasVariants ? 0 : $product->harga }},
             variantSelected: {{ $hasVariants ? 'false' : 'true' }}
-        }" class="max-w-5xl mx-auto bg-white rounded-[28px] border overflow-hidden"
-            style="display:grid; grid-template-columns:1.05fr 1fr; border-color:#EBEBEB;">
+        }" class="max-w-5xl mx-auto bg-white rounded-[28px] border overflow-hidden pd-product-grid"
+            style="border-color:#EBEBEB;">
 
             {{-- KIRI: GALERI --}}
-            <div style="background:#F5F2EC; padding:28px; display:flex; flex-direction:column; gap:14px; position:relative;">
+            <div class="pd-gallery" style="background:#F5F2EC; padding:28px; display:flex; flex-direction:column; gap:14px; position:relative;">
 
                 @php $primary = $product->primaryImage ?? $product->images->first(); @endphp
                 <div class="pd-main-img" style="position:relative; width:100%; aspect-ratio:1; border-radius:20px; overflow:hidden; background:#E8E3D8;">
@@ -136,13 +168,13 @@
             </div>
 
             {{-- KANAN: DETAIL --}}
-            <div style="padding:36px 32px; display:flex; flex-direction:column; border-left:1px solid #EBEBEB;">
+            <div class="pd-detail" style="padding:36px 32px; display:flex; flex-direction:column; border-left:1px solid #EBEBEB;">
                 <form id="purchaseForm" action="{{ route('checkout.review') }}" method="GET" style="display:flex; flex-direction:column; flex:1;">
                     <input type="hidden" name="product_id" value="{{ $product->product_id }}">
 
                     {{-- Store --}}
                     @if ($store)
-                        <div style="display:flex; align-items:center; gap:7px; font-size:12px; color:#999; font-weight:500; margin-bottom:14px;">
+                        <div style="display:flex; align-items:center; gap:7px; font-size:12px; color:#999; font-weight:500; margin-bottom:14px; flex-wrap:wrap;">
                             <span style="width:7px; height:7px; border-radius:50%; background:#22C55E; display:inline-block; flex-shrink:0;"></span>
                             {{ $store->nama_toko }}
                             @if ($store->city)
@@ -153,17 +185,17 @@
                     @endif
 
                     {{-- Title --}}
-                    <h1 class="pd-serif" style="font-size:30px; font-weight:700; line-height:1.2; color:#1C1C1C; letter-spacing:-.01em; margin-bottom:20px;">
+                    <h1 class="pd-serif pd-title" style="font-size:30px; font-weight:700; line-height:1.2; color:#1C1C1C; letter-spacing:-.01em; margin-bottom:20px;">
                         {{ $product->nama_produk }}
                     </h1>
 
                     {{-- Price block --}}
-                    <div style="background:#F5F2EC; border-radius:16px; padding:16px 18px; display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+                    <div style="background:#F5F2EC; border-radius:16px; padding:16px 18px; display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; gap:10px;">
                         <div>
                             <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#BBB; margin-bottom:4px;">Harga</div>
-                            <div style="font-size:26px; font-weight:700; color:#1C1C1C; letter-spacing:-.02em;">
+                            <div class="pd-price-val" style="font-size:26px; font-weight:700; color:#1C1C1C; letter-spacing:-.02em;">
                                 <span x-show="variantSelected" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(price)"></span>
-                                <span x-show="!variantSelected" style="color:#C0BDB4; font-size:18px; font-weight:500;">Pilih varian dulu</span>
+                                <span x-show="!variantSelected" style="color:#C0BDB4; font-size:16px; font-weight:500;">Pilih varian dulu</span>
                             </div>
                         </div>
                         <template x-if="variantSelected">
@@ -193,7 +225,7 @@
                     {{-- Variants --}}
                     @if ($hasVariants)
                         <div style="margin-bottom:20px;">
-                            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:#BBB; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+                            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:#BBB; margin-bottom:10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                                 Pilih Varian
                                 <span x-show="selectedVariant" x-text="'— ' + selectedVariant"
                                       style="color:#1C1C1C; font-size:11px; text-transform:none; letter-spacing:0; font-weight:600;"></span>
@@ -240,27 +272,27 @@
                     @endif
 
                     {{-- Quantity --}}
-                    <div x-show="variantSelected" x-transition style="display:flex; align-items:center; gap:14px; margin-bottom:20px;">
+                    <div x-show="variantSelected" x-transition style="display:flex; align-items:center; gap:14px; margin-bottom:20px; flex-wrap:wrap;">
                         <div style="display:flex; align-items:center; border:1.5px solid #E8E4DC; border-radius:10px; overflow:hidden;">
                             <button type="button" @click="if(qty > 1) qty--" class="pd-qty-btn"
-                                style="width:38px; height:38px; border:none; background:none; font-size:20px; font-weight:300; color:#555; cursor:pointer; line-height:1; transition:background .15s;">
+                                style="width:42px; height:42px; border:none; background:none; font-size:20px; font-weight:300; color:#555; cursor:pointer; line-height:1; transition:background .15s;">
                                 −
                             </button>
                             <input type="number" name="quantity" x-model="qty" readonly
-                                style="width:40px; text-align:center; background:transparent; border:none; border-left:1px solid #E8E4DC; border-right:1px solid #E8E4DC; font-weight:700; font-size:14px; height:38px; color:#1C1C1C; outline:none;">
+                                style="width:44px; text-align:center; background:transparent; border:none; border-left:1px solid #E8E4DC; border-right:1px solid #E8E4DC; font-weight:700; font-size:14px; height:42px; color:#1C1C1C; outline:none;">
                             <button type="button" @click="if(qty < maxStock) qty++" class="pd-qty-btn"
-                                style="width:38px; height:38px; border:none; background:none; font-size:20px; font-weight:300; color:#555; cursor:pointer; line-height:1; transition:background .15s;">
+                                style="width:42px; height:42px; border:none; background:none; font-size:20px; font-weight:300; color:#555; cursor:pointer; line-height:1; transition:background .15s;">
                                 +
                             </button>
                         </div>
-                        <p style="font-size:11px; color:#BBB; line-height:1.55; max-width:180px;">
+                        <p style="font-size:11px; color:#BBB; line-height:1.55;">
                             Total biaya & ongkir dihitung di halaman berikutnya.
                         </p>
                     </div>
 
                     {{-- CTA --}}
                     <div style="margin-top:auto; padding-top:18px; border-top:1px solid #F0EDE6;">
-                        <div x-show="variantSelected" x-transition style="display:flex; gap:10px; margin-bottom:12px;">
+                        <div x-show="variantSelected" x-transition class="pd-cta-row" style="display:flex; gap:10px; margin-bottom:12px;">
                             <button type="button" onclick="submitCart()" class="pd-btn-cart"
                                 style="flex:1; padding:14px; border-radius:12px; border:2px solid #1C1C1C; background:#fff; color:#1C1C1C; font-weight:700; font-size:12px; cursor:pointer; letter-spacing:.05em; text-transform:uppercase; font-family:'Plus Jakarta Sans',sans-serif;">
                                 + Keranjang
@@ -288,7 +320,7 @@
         </div>
 
         {{-- REVIEW SECTION --}}
-        <div class="max-w-5xl mx-auto mt-6 bg-white rounded-[28px] border overflow-hidden" style="padding:40px; border-color:#EBEBEB;">
+        <div class="max-w-5xl mx-auto mt-6 bg-white rounded-[28px] border overflow-hidden" style="padding:28px 20px; border-color:#EBEBEB;">
             @include('products._review_section', [
                 'product'        => $product,
                 'reviews'        => $reviews,

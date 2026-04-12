@@ -270,7 +270,7 @@ class OrderController extends Controller
                     $cart = Cart::where('user_id', $pending['user_id'])->first();
                     $cart?->items()->delete();
                 }
-                
+
                 $order->load(['user', 'items.product', 'items.variant', 'payment', 'shippingZone', 'shippingOption']);
                 \Illuminate\Support\Facades\Mail::to($order->user->email)
                     ->queue(new \App\Mail\InvoiceMail($order));
@@ -599,5 +599,39 @@ class OrderController extends Controller
         }
 
         return compact('items', 'itemsToProcess', 'totalProduk', 'beratGram', 'storeProvinceId');
+    }
+
+    public function invoicePrint($id)
+    {
+        $order = Order::with([
+            'user',
+            'items.product',
+            'items.variant',
+            'payment',
+            'shippingZone',
+            'shippingOption',
+        ])->findOrFail($id);
+
+        if (auth()->user()->role !== 'admin' && $order->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        return view('orders.invoice-print', compact('order'));
+    }
+
+    public function cetakResi($id)
+    {
+        $order = Order::with([
+            'user',
+            'items.product',
+            'items.variant',
+            'shippingZone',
+            'shippingOption',
+        ])->findOrFail($id);
+
+        if (auth()->user()->role !== 'admin')
+            abort(403);
+
+        return view('orders.cetak-resi', compact('order'));
     }
 }

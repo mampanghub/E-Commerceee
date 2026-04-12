@@ -17,6 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
             UpdateUserLastSeen::class,
         ]);
 
+        $middleware->trustProxies(at: '*'); 
+
         $middleware->validateCsrfTokens(except: [
             '/api/payment-callback',
             'api/midtrans/callback',

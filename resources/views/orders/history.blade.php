@@ -8,7 +8,7 @@
         </div>
     </x-slot>
 
-    <div class="py-10 bg-slate-50/50 min-h-screen">
+    <div class="py-6 bg-slate-50/50 min-h-screen">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
             @if (session('success'))
@@ -22,33 +22,34 @@
                 </div>
             @endif
 
-            {{-- TAB NAVIGATION --}}
-            <div class="flex gap-0 border-b border-slate-200 -mb-px mb-6">
-                @php
-                    $tabs = [
-                        'semua' => ['label' => 'Semua', 'count' => array_sum($counts)],
-                        'dibayar' => ['label' => 'Dibayar', 'count' => $counts['dibayar']],
-                        'dikemas' => ['label' => 'Dikemas', 'count' => $counts['dikemas']],
-                        'dikirim' => ['label' => 'Dikirim', 'count' => $counts['dikirim']],
-                        'selesai' => ['label' => 'Selesai', 'count' => $counts['selesai']],
-                    ];
-                    $activeTab = request('tab', 'dibayar');
-                @endphp
+            {{-- TAB NAVIGATION (STICKY) --}}
+            <div class="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-sm -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 mb-6">
+                <div class="flex gap-0 border-b border-slate-200 overflow-x-auto scrollbar-hide">
+                    @php
+                        $tabs = [
+                            'semua'   => ['label' => 'Semua',   'count' => array_sum($counts)],
+                            'dibayar' => ['label' => 'Dibayar', 'count' => $counts['dibayar']],
+                            'dikemas' => ['label' => 'Dikemas', 'count' => $counts['dikemas']],
+                            'dikirim' => ['label' => 'Dikirim', 'count' => $counts['dikirim']],
+                            'selesai' => ['label' => 'Selesai', 'count' => $counts['selesai']],
+                        ];
+                        $activeTab = request('tab', 'dibayar');
+                    @endphp
 
-                @foreach ($tabs as $key => $tab)
-                    <a href="{{ route('orders.history', ['tab' => $key]) }}"
-                        class="flex items-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-widest border-b-2 transition-all
-                {{ $activeTab === $key ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
-                        {{ $tab['label'] }}
-                        @if ($tab['count'] > 0)
-                            <span
-                                class="text-[10px] font-black px-1.5 py-0.5 rounded-md
-                    {{ $activeTab === $key ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500' }}">
-                                {{ $tab['count'] }}
-                            </span>
-                        @endif
-                    </a>
-                @endforeach
+                    @foreach ($tabs as $key => $tab)
+                        <a href="{{ route('orders.history', ['tab' => $key]) }}"
+                            class="flex items-center gap-1.5 px-4 py-3 text-xs font-black uppercase tracking-widest border-b-2 transition-all whitespace-nowrap shrink-0
+                            {{ $activeTab === $key ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
+                            {{ $tab['label'] }}
+                            @if ($tab['count'] > 0)
+                                <span class="text-[10px] font-black px-1.5 py-0.5 rounded-md
+                                    {{ $activeTab === $key ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500' }}">
+                                    {{ $tab['count'] }}
+                                </span>
+                            @endif
+                        </a>
+                    @endforeach
+                </div>
             </div>
 
             {{-- EMPTY STATE --}}
@@ -73,64 +74,42 @@
                         @php
                             $statusConfig = [
                                 'dibayar' => ['bg-blue-50 text-blue-700 border-blue-200', 'Dibayar', 'border-blue-100'],
-                                'dikemas' => [
-                                    'bg-indigo-50 text-indigo-700 border-indigo-200',
-                                    'Sedang Dikemas',
-                                    'border-indigo-100',
-                                ],
-                                'dikirim' => [
-                                    'bg-violet-50 text-violet-700 border-violet-200',
-                                    'Sedang Dikirim',
-                                    'border-violet-100',
-                                ],
-                                'selesai' => [
-                                    'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                    'Selesai',
-                                    'border-emerald-100',
-                                ],
+                                'dikemas' => ['bg-indigo-50 text-indigo-700 border-indigo-200', 'Sedang Dikemas', 'border-indigo-100'],
+                                'dikirim' => ['bg-violet-50 text-violet-700 border-violet-200', 'Sedang Dikirim', 'border-violet-100'],
+                                'selesai' => ['bg-emerald-50 text-emerald-700 border-emerald-200', 'Selesai', 'border-emerald-100'],
                             ];
                             [$badgeClass, $statusLabel, $cardBorder] = $statusConfig[$order->status] ?? [
-                                'bg-slate-50 text-slate-700 border-slate-100',
-                                $order->status,
-                                'border-slate-100',
+                                'bg-slate-50 text-slate-700 border-slate-100', $order->status, 'border-slate-100',
                             ];
                         @endphp
 
-                        <div
-                            class="bg-white rounded-3xl border {{ $cardBorder }} shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                        <div class="bg-white rounded-3xl border {{ $cardBorder }} shadow-sm hover:shadow-md transition-shadow overflow-hidden">
 
                             {{-- HEADER CARD --}}
-                            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-50">
-                                <div class="flex items-center gap-3">
-                                    <span
-                                        class="font-mono font-black text-slate-700 text-sm">#{{ $order->order_id }}</span>
-                                    <span class="text-slate-300">·</span>
-                                    <span class="text-xs text-slate-400">{{ $order->created_at->format('d M Y, H:i') }}
-                                        WIB</span>
+                            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-50 gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="font-mono font-black text-slate-700 text-sm shrink-0">#{{ $order->order_id }}</span>
+                                    <span class="text-slate-300 shrink-0">·</span>
+                                    <span class="text-xs text-slate-400 truncate">{{ $order->created_at->format('d M Y, H:i') }} WIB</span>
                                 </div>
-                                <span
-                                    class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black border uppercase tracking-widest {{ $badgeClass }}">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-current mr-1.5"></span>
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-widest shrink-0 {{ $badgeClass }}">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-current mr-1"></span>
                                     {{ $statusLabel }}
                                 </span>
                             </div>
 
                             {{-- PRODUK PREVIEW --}}
-                            <div class="px-6 py-4">
+                            <div class="px-4 py-4">
                                 @php $previewItems = $order->items->take(2); @endphp
                                 <div class="space-y-3">
                                     @foreach ($previewItems as $item)
+                                        @php
+                                            $fotoVarian = $item->variant_id
+                                                ? $item->product->images->where('variant_id', $item->variant_id)->first()
+                                                : null;
+                                            $gambarItem = $fotoVarian?->gambar ?? $item->product->primaryImage?->gambar;
+                                        @endphp
                                         <div class="flex items-center gap-3">
-                                            {{-- FIX: prioritaskan foto varian --}}
-                                            @php
-                                                $fotoVarian = $item->variant_id
-                                                    ? $item->product->images
-                                                        ->where('variant_id', $item->variant_id)
-                                                        ->first()
-                                                    : null;
-                                                $gambarItem =
-                                                    $fotoVarian?->gambar ?? $item->product->primaryImage?->gambar;
-                                            @endphp
                                             @if ($gambarItem)
                                                 <img src="{{ Storage::url($gambarItem) }}"
                                                     class="w-12 h-12 rounded-2xl object-cover bg-slate-100 shrink-0">
@@ -138,44 +117,35 @@
                                                 <div class="w-12 h-12 rounded-2xl bg-slate-100 shrink-0"></div>
                                             @endif
                                             <div class="flex-1 min-w-0">
-                                                <p class="font-bold text-slate-800 text-sm truncate">
-                                                    {{ $item->product->nama_produk }}</p>
+                                                <p class="font-bold text-slate-800 text-sm truncate">{{ $item->product->nama_produk }}</p>
                                                 @if ($item->variant)
-                                                    <p class="text-xs text-slate-400">{{ $item->variant->nama_varian }}
-                                                        ·
-                                                        {{ $item->jumlah }}x</p>
+                                                    <p class="text-xs text-slate-400">{{ $item->variant->nama_varian }} · {{ $item->jumlah }}x</p>
                                                 @else
                                                     <p class="text-xs text-slate-400">{{ $item->jumlah }}x</p>
                                                 @endif
                                             </div>
-                                            <p class="text-sm font-black text-slate-800 shrink-0">Rp
-                                                {{ number_format($item->harga * $item->jumlah, 0, ',', '.') }}</p>
+                                            <p class="text-sm font-black text-slate-800 shrink-0">Rp {{ number_format($item->harga * $item->jumlah, 0, ',', '.') }}</p>
                                         </div>
                                     @endforeach
                                     @if ($order->items->count() > 2)
-                                        <p class="text-xs text-slate-400 font-semibold">
-                                            +{{ $order->items->count() - 2 }} produk
-                                            lainnya</p>
+                                        <p class="text-xs text-slate-400 font-semibold">+{{ $order->items->count() - 2 }} produk lainnya</p>
                                     @endif
                                 </div>
                             </div>
 
                             {{-- FOOTER CARD --}}
-                            <div
-                                class="flex items-center justify-between px-6 py-4 bg-slate-50/50 border-t border-slate-50">
-                                <div>
+                            <div class="px-4 py-3 bg-slate-50/50 border-t border-slate-50">
+                                {{-- Baris total --}}
+                                <div class="flex items-center justify-between mb-3">
                                     <span class="text-xs text-slate-400 font-semibold">Total Pembayaran</span>
-                                    <p class="font-black text-slate-900 text-base">Rp
-                                        {{ number_format($order->total_harga, 0, ',', '.') }}</p>
+                                    <p class="font-black text-slate-900 text-base">Rp {{ number_format($order->total_harga, 0, ',', '.') }}</p>
                                 </div>
-                                <div class="flex items-center gap-2">
-
-                                    {{-- Invoice — tampil untuk semua status kecuali menunggu --}}
+                                {{-- Baris tombol --}}
+                                <div class="flex items-center gap-2 justify-end">
                                     @if ($order->status !== 'menunggu')
                                         <a href="{{ route('orders.invoice', $order->order_id) }}" target="_blank"
-                                            class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-black text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
+                                            class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-black text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all">
+                                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                             </svg>
@@ -183,7 +153,6 @@
                                         </a>
                                     @endif
 
-                                    {{-- Konfirmasi diterima --}}
                                     @if ($order->status === 'dikirim')
                                         <form id="confirm-form-{{ $order->order_id }}"
                                             action="{{ route('orders.confirm-delivery', $order->order_id) }}"
@@ -191,18 +160,16 @@
                                             @csrf
                                         </form>
                                         <button type="button" onclick="konfirmasiDiterima({{ $order->order_id }})"
-                                            class="px-4 py-2 bg-emerald-600 text-white text-xs font-black rounded-xl hover:bg-emerald-700 transition-all">
-                                            ✓ Pesanan Diterima
+                                            class="px-3 py-2 bg-emerald-600 text-white text-xs font-black rounded-xl hover:bg-emerald-700 transition-all whitespace-nowrap">
+                                            ✓ Diterima
                                         </button>
                                     @endif
 
                                     <a href="{{ route('orders.show', $order->order_id) }}"
-                                        class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-black text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-all">
+                                        class="inline-flex items-center gap-1 px-3 py-2 text-xs font-black text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-all whitespace-nowrap">
                                         Lihat Detail
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                                d="M9 5l7 7-7 7" />
+                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
                                         </svg>
                                     </a>
                                 </div>
@@ -219,6 +186,12 @@
             @endif
         </div>
     </div>
+
+    <style>
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+
     <script>
         function konfirmasiDiterima(orderId) {
             Swal.fire({
@@ -230,9 +203,7 @@
                 cancelButtonText: 'Belum',
                 confirmButtonColor: '#059669',
                 cancelButtonColor: '#94a3b8',
-                customClass: {
-                    popup: 'rounded-[2rem]'
-                }
+                customClass: { popup: 'rounded-[2rem]' }
             }).then(result => {
                 if (result.isConfirmed) {
                     document.getElementById('confirm-form-' + orderId).submit();
@@ -250,33 +221,29 @@
                 Swal.fire({
                     title: '⭐ Kasih Ulasan Yuk!',
                     html: `
-            <p style="color:#94a3b8;font-size:13px;margin-bottom:16px;">
-                Gimana pengalamanmu dengan produk ini?
-            </p>
-            <div id="swal-stars" style="display:flex;justify-content:center;gap:8px;margin-bottom:8px;">
-                ${[1,2,3,4,5].map(i => `
-                                    <svg data-val="${i}" class="swal-star"
-                                        style="width:40px;height:40px;color:#e5e7eb;cursor:pointer;transition:color .15s;"
-                                        fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                    </svg>
-                                `).join('')}
-            </div>
-            <p id="swal-star-label" style="font-size:12px;color:#94a3b8;margin-bottom:12px;">
-                Pilih bintang dulu
-            </p>
-            <textarea id="swal-komentar" rows="3"
-                placeholder="Ceritakan pengalamanmu (opsional)..."
-                style="width:100%;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;font-size:13px;resize:none;outline:none;box-sizing:border-box;"></textarea>
-        `,
+                        <p style="color:#94a3b8;font-size:13px;margin-bottom:16px;">
+                            Gimana pengalamanmu dengan produk ini?
+                        </p>
+                        <div id="swal-stars" style="display:flex;justify-content:center;gap:8px;margin-bottom:8px;">
+                            ${[1,2,3,4,5].map(i => `
+                                <svg data-val="${i}" class="swal-star"
+                                    style="width:40px;height:40px;color:#e5e7eb;cursor:pointer;transition:color .15s;"
+                                    fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                            `).join('')}
+                        </div>
+                        <p id="swal-star-label" style="font-size:12px;color:#94a3b8;margin-bottom:12px;">Pilih bintang dulu</p>
+                        <textarea id="swal-komentar" rows="3"
+                            placeholder="Ceritakan pengalamanmu (opsional)..."
+                            style="width:100%;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;font-size:13px;resize:none;outline:none;box-sizing:border-box;"></textarea>
+                    `,
                     showCancelButton: true,
                     confirmButtonText: 'Kirim Ulasan',
                     cancelButtonText: 'Nanti Aja',
                     confirmButtonColor: '#f59e0b',
                     cancelButtonColor: '#94a3b8',
-                    customClass: {
-                        popup: 'rounded-[2rem]'
-                    },
+                    customClass: { popup: 'rounded-[2rem]' },
                     didOpen: () => {
                         const stars = document.querySelectorAll('.swal-star');
                         const paintStars = (upTo) => {
@@ -286,11 +253,9 @@
                             star.addEventListener('click', () => {
                                 selectedStar = parseInt(star.dataset.val);
                                 paintStars(selectedStar);
-                                document.getElementById('swal-star-label').textContent =
-                                    starLabels[selectedStar];
+                                document.getElementById('swal-star-label').textContent = starLabels[selectedStar];
                             });
-                            star.addEventListener('mouseenter', () => paintStars(parseInt(star
-                                .dataset.val)));
+                            star.addEventListener('mouseenter', () => paintStars(parseInt(star.dataset.val)));
                             star.addEventListener('mouseleave', () => paintStars(selectedStar));
                         });
                     },
@@ -299,10 +264,7 @@
                             Swal.showValidationMessage('Pilih bintang dulu ya!');
                             return false;
                         }
-                        return {
-                            bintang: selectedStar,
-                            komentar: document.getElementById('swal-komentar').value
-                        };
+                        return { bintang: selectedStar, komentar: document.getElementById('swal-komentar').value };
                     }
                 }).then(result => {
                     if (!result.isConfirmed) return;
@@ -313,22 +275,15 @@
                     form.append('bintang', result.value.bintang);
                     form.append('komentar', result.value.komentar);
 
-                    fetch('{{ route('reviews.store', session('review_product_id') ?? 0) }}', {
-                            method: 'POST',
-                            body: form
-                        })
-                        .then(r => {
-                            if (!r.ok) throw new Error();
-                        })
+                    fetch('{{ route('reviews.store', session('review_product_id') ?? 0) }}', { method: 'POST', body: form })
+                        .then(r => { if (!r.ok) throw new Error(); })
                         .then(() => {
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Makasih ulasannya! 🎉',
                                 showConfirmButton: false,
                                 timer: 2000,
-                                customClass: {
-                                    popup: 'rounded-[2rem]'
-                                }
+                                customClass: { popup: 'rounded-[2rem]' }
                             }).then(() => window.location.reload());
                         })
                         .catch(() => {
@@ -336,9 +291,7 @@
                                 icon: 'error',
                                 title: 'Gagal Kirim',
                                 text: 'Coba lagi ya.',
-                                customClass: {
-                                    popup: 'rounded-[2rem]'
-                                }
+                                customClass: { popup: 'rounded-[2rem]' }
                             });
                         });
                 });

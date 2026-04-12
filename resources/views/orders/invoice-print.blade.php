@@ -4,10 +4,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Invoice #{{ str_pad($order->order_id, 6, '0', STR_PAD_LEFT) }}</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#f1f5f9; font-family:Arial,Helvetica,sans-serif; }
+    #btn-wrap { max-width:600px;margin:24px auto 12px;text-align:right;padding:0 8px; }
+    #btn-cetak { background:#0f172a;color:#fff;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;border:none;padding:11px 26px;border-radius:8px;cursor:pointer;letter-spacing:0.3px; }
+    #btn-cetak:hover { background:#1e293b; }
+    @media print {
+      @page { size:A4; margin:10mm; }
+      body { background:white !important; }
+      #btn-wrap { display:none !important; }
+    }
+  </style>
 </head>
-<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;">
+<body>
 
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f5f9;padding:32px 0;">
+  <div id="btn-wrap">
+    <button id="btn-cetak">🖨️ Cetak / Simpan PDF</button>
+  </div>
+
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f5f9;padding:0 0 40px;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" border="0"
         style="background:#ffffff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;max-width:600px;width:100%;">
@@ -37,7 +53,7 @@
               <td>
                 <table cellpadding="0" cellspacing="0" border="0"><tr>
                   <td style="width:8px;padding-right:7px;">
-                    <div style="width:7px;height:7px;background:#16a34a;border-radius:50%;"></div>
+                    <div style="width:7px;height:7px;background:#16a34a;border-radius:50%;-webkit-print-color-adjust:exact;print-color-adjust:exact;"></div>
                   </td>
                   <td style="font-size:12px;font-weight:700;color:#16a34a;font-family:Arial,Helvetica,sans-serif;">Pembayaran Berhasil</td>
                 </tr></table>
@@ -135,16 +151,6 @@
             </tr>
           </table>
 
-          {{-- Tombol ke halaman cetak --}}
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;">
-            <tr><td align="center">
-              <a href="{{ route('orders.invoice-print', $order->order_id) }}"
-                style="display:inline-block;background:#0f172a;color:#ffffff;font-size:13px;font-weight:700;font-family:Arial,Helvetica,sans-serif;text-decoration:none;padding:12px 28px;border-radius:8px;letter-spacing:0.3px;">
-                🖨️ Cetak / Simpan PDF
-              </a>
-            </td></tr>
-          </table>
-
         </td></tr>
 
         {{-- FOOTER --}}
@@ -153,8 +159,9 @@
             <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;font-family:Arial,Helvetica,sans-serif;">
               Terima kasih telah berbelanja di <span style="font-weight:700;color:#0f172a;">MampangPedia</span>
             </div>
+
             <div style="font-size:11px;color:#cbd5e1;margin-top:10px;font-family:Arial,Helvetica,sans-serif;">
-               &middot; {{ now()->format('d F Y') }}
+                &middot; {{ now()->format('d F Y') }}
             </div>
           </td>
         </tr>
@@ -162,6 +169,12 @@
       </table>
     </td></tr>
   </table>
+
+  <script>
+    document.getElementById('btn-cetak').addEventListener('click', function() {
+      window.print();
+    });
+  </script>
 
 </body>
 </html>

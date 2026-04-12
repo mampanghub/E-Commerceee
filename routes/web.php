@@ -55,9 +55,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/laporan', [HomeController::class, 'laporan'])->name('admin.laporan');
 
     Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
-    Route::patch('/orders/{id}/assign-kurir', [\App\Http\Controllers\KurirController::class, 'assign'])
+    Route::patch('/orders/{id}/assign-kurir', [KurirController::class, 'assign'])
         ->middleware(['auth', 'role:admin'])
         ->name('orders.assign-kurir');
+    Route::get('/orders/{id}/cetak-resi', [OrderController::class, 'cetakResi'])->name('orders.cetak-resi');
 
     Route::get('/admin/users/create-kurir', [UserController::class, 'createKurir'])->name('admin.users.create-kurir');
     Route::post('/admin/users/store-kurir', [UserController::class, 'storeKurir'])->name('admin.users.store-kurir');
@@ -83,6 +84,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout', [OrderController::class, 'checkout'])->name('checkout');
     Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
     Route::post('/orders/{id}/confirm-delivery', [OrderController::class, 'confirmDelivery'])->name('orders.confirm-delivery');
+    Route::get('/orders/{id}/invoice/print', [OrderController::class, 'invoicePrint'])
+        ->middleware('auth')
+        ->name('orders.invoice-print');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
