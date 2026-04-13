@@ -16,14 +16,14 @@ class KurirController extends Controller
 
         $aktif = Order::where('kurir_id', Auth::id())
             ->whereIn('status', ['dikemas', 'dikirim'])
-            ->with(['items.product.primaryImage', 'items.product.images', 'items.variant', 'shippingOption']) // tambah images
+            ->with(['items.product.primaryImage', 'items.product.images', 'items.variant', 'shippingOption'])
             ->orderByRaw("FIELD(status, 'dikemas', 'dikirim')")
             ->orderBy('updated_at', 'asc')
             ->get();
 
         $tersedia = Order::where('status', 'dikemas')
             ->whereNull('kurir_id')
-            ->with(['items.product.primaryImage', 'items.product.images', 'items.variant', 'shippingOption']) // tambah images
+            ->with(['items.product.primaryImage', 'items.product.images', 'items.variant', 'shippingOption'])
             ->orderBy('updated_at', 'asc')
             ->get();
 
@@ -46,14 +46,9 @@ class KurirController extends Controller
                     });
             })
             ->with([
-                'user.province',
-                'user.city',
-                'user.district',
-                'user.village',
-                'items.product.primaryImage',
-                'items.product.images', // tambah images
-                'items.variant',
-                'shippingOption',
+                'user.province', 'user.city', 'user.district', 'user.village',
+                'items.product.primaryImage', 'items.product.images',
+                'items.variant', 'shippingOption',
             ])
             ->firstOrFail();
 
@@ -83,7 +78,7 @@ class KurirController extends Controller
             });
 
             return redirect()->route('kurir.index', ['tab' => 'aktif'])
-                ->with('success', "Paket #$id berhasil diambil! Resi sudah digenerate, segera antar ya 🚀");
+                ->with('success', "Paket #$id berhasil diambil! Resi sudah digenerate, segera antar ya.");
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return redirect()->route('kurir.index', ['tab' => 'tersedia'])
                 ->with('error', "Paket #$id sudah diambil kurir lain. Cari paket lainnya!");
@@ -92,6 +87,7 @@ class KurirController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
+        // FIX: pastikan order ini memang milik kurir yang sedang login
         $order = Order::where('order_id', $id)
             ->where('kurir_id', Auth::id())
             ->firstOrFail();
@@ -115,20 +111,41 @@ class KurirController extends Controller
             if ($order->status !== 'dikirim') {
                 return back()->with('error', 'Order belum dalam status dikirim!');
             }
+
             $request->validate([
                 'foto_konfirmasi' => 'required|image|mimes:jpg,jpeg,png|max:3072',
             ], [
                 'foto_konfirmasi.required' => 'Foto konfirmasi wajib diupload.',
                 'foto_konfirmasi.max'      => 'Ukuran foto maksimal 3MB.',
             ]);
-            $fotoPath = $request->file('foto_konfirmasi')->store('konfirmasi-pengiriman', 'public');
+
+            // FIX: simpan foto dengan path yang menyertakan order_id dan kurir_id
+            // supaya tidak bisa pakai foto lama dari order lain
+            $fotoPath = $request->file('foto_konfirmasi')
+                ->storeAs(
+                    'konfirmasi-pengiriman',
+                    "order-{$order->order_id}-kurir-" . Auth::id() . '-' . time() . '.' . $request->file('foto_konfirmasi')->extension(),
+                    'public'
+                );
+
             DB::transaction(function () use ($order, $fotoPath) {
                 $fresh = Order::where('order_id', $order->order_id)->lockForUpdate()->first();
-                if ($fresh->status === 'selesai') return;
 
-                $fresh->update(['status' => 'selesai', 'foto_konfirmasi' => $fotoPath]);
+                // FIX: validasi ulang bahwa order ini masih milik kurir yang sama
+                // dan belum selesai — cegah race condition atau manipulasi
+                if ($fresh->status === 'selesai') return;
+                if ($fresh->kurir_id !== Auth::id()) {
+                    throw new \Exception('Order ini bukan milik kamu.');
+                }
+
+                $fresh->update([
+                    'status'           => 'selesai',
+                    'foto_konfirmasi'  => $fotoPath,
+                ]);
+
                 Auth::user()->increment('saldo', $order->ongkir);
             });
+
             return back()->with('success', "Order #{$order->order_id} selesai! Ongkir Rp " . number_format($order->ongkir, 0, ',', '.') . " masuk ke saldo kamu.");
         }
 
@@ -143,13 +160,14 @@ class KurirController extends Controller
             ->with(['user', 'shippingOption'])
             ->orderBy('updated_at', 'desc')
             ->paginate(10);
+
         $totalPenghasilan = Order::where('kurir_id', $kurir->user_id)
-            ->where('status', 'selesai')->sum('ongkir');
+            ->where('status', 'selesai')
+            ->sum('ongkir');
 
         return view('kurir.saldo', compact('kurir', 'riwayat', 'totalPenghasilan'));
     }
 
-    // Admin manual assign (opsional, edge case)
     public function assign(Request $request, $id)
     {
         $request->validate(['kurir_id' => 'required|exists:users,user_id']);

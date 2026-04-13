@@ -9,7 +9,7 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = Category::all();
+        $categories = Category::withCount('products')->get();
         return view('categories.index', compact('categories'));
     }
 
@@ -21,7 +21,7 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_kategori' => 'required'
+            'nama_kategori' => 'required|string|max:100|unique:categories,nama_kategori',
         ]);
 
         Category::create([
@@ -41,7 +41,7 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'nama_kategori' => 'required'
+            'nama_kategori' => 'required|string|max:100|unique:categories,nama_kategori,' . $id . ',category_id',
         ]);
 
         $category = Category::findOrFail($id);
@@ -55,7 +55,15 @@ class CategoryController extends Controller
 
     public function destroy($id)
     {
-        Category::destroy($id);
+        $category = Category::withCount('products')->findOrFail($id);
+
+        // FIX: cek apakah masih ada produk di kategori ini
+        if ($category->products_count > 0) {
+            return redirect()->route('categories.index')
+                ->with('error', "Kategori \"{$category->nama_kategori}\" tidak bisa dihapus karena masih memiliki {$category->products_count} produk. Pindahkan atau hapus produknya dulu.");
+        }
+
+        $category->delete();
 
         return redirect()->route('categories.index')
             ->with('success', 'Kategori berhasil dihapus');

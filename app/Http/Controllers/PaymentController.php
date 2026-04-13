@@ -5,19 +5,23 @@ namespace App\Http\Controllers;
 use App\Models\Payment;
 use App\Models\Order;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
     public function store(Request $request)
     {
-        $order = Order::findOrFail($request->order_id);
+        // FIX: pastikan order milik user yang sedang login
+        $order = Order::where('order_id', $request->order_id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
 
+        // FIX: nama kolom disamain dengan Payment model ('metode_pembayaran')
         Payment::create([
-            'order_id'      => $order->order_id,
-            'metode'        => $request->metode,
-            'status'        => 'dibayar',
-            'tanggal_bayar' => now()
+            'order_id'           => $order->order_id,
+            'metode_pembayaran'  => $request->metode,
+            'status'             => 'dibayar',
+            'tanggal_bayar'      => now(),
         ]);
 
         $order->update([
@@ -28,41 +32,39 @@ class PaymentController extends Controller
     }
 
     public function confirmPayment(Request $request, $id)
-{
-    // 1. Cari data order (pastikan menggunakan kolom yang benar)
-    $order = \App\Models\Order::where('order_id', $id)->firstOrFail();
+    {
+        // FIX: pastikan order milik user yang sedang login
+        $order = Order::where('order_id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
 
-    // 2. Konfigurasi Midtrans
-    \Midtrans\Config::$serverKey = config('midtrans.server_key');
-    \Midtrans\Config::$isProduction = config('midtrans.is_production', false);
-    \Midtrans\Config::$isSanitized = true;
-    \Midtrans\Config::$is3ds = true;
+        \Midtrans\Config::$serverKey    = config('midtrans.server_key');
+        \Midtrans\Config::$isProduction = config('midtrans.is_production', false);
+        \Midtrans\Config::$isSanitized  = true;
+        \Midtrans\Config::$is3ds        = true;
 
-    // 3. Parameter (Tambahkan random string agar order_id unik di Midtrans)
-    $params = [
-        'transaction_details' => [
-            // Gunakan suffix time() agar tidak error "Duplicated Order ID" di Midtrans
-            'order_id' => $order->order_id . '-' . time(),
-            'gross_amount' => (int)$order->total_harga,
-        ],
-        'customer_details' => [
-            'first_name' => auth()->user()->name,
-            'email' => auth()->user()->email,
-        ],
-    ];
+        $params = [
+            'transaction_details' => [
+                'order_id'     => $order->order_id . '-' . time(),
+                'gross_amount' => (int) $order->total_harga,
+            ],
+            'customer_details' => [
+                'first_name' => Auth::user()->name,
+                'email'      => Auth::user()->email,
+            ],
+        ];
 
-    try {
-        $snapToken = \Midtrans\Snap::getSnapToken($params);
+        try {
+            $snapToken = \Midtrans\Snap::getSnapToken($params);
 
-        // 4. Update Database
-        // Kita panggil save() secara eksplisit agar lebih aman
-        $order->snap_token = $snapToken;
-        $order->save();
+            $order->snap_token = $snapToken;
+            $order->save();
 
-        return redirect()->route('orders.show', $id)->with('success', 'Token berhasil dibuat, silakan bayar!');
-    } catch (\Exception $e) {
-        // Tampilkan error jika gagal konek ke Midtrans
-        return redirect()->route('orders.show', $id)->with('error', 'Gagal: ' . $e->getMessage());
+            return redirect()->route('orders.show', $id)
+                ->with('success', 'Token berhasil dibuat, silakan bayar!');
+        } catch (\Exception $e) {
+            return redirect()->route('orders.show', $id)
+                ->with('error', 'Gagal: ' . $e->getMessage());
+        }
     }
-}
 }

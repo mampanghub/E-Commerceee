@@ -49,7 +49,7 @@ class CartController extends Controller
             CartItem::create([
                 'cart_id'    => $cart->cart_id,
                 'product_id' => $product->product_id,
-                'variant_id' => $variantId, // SIMPAN variant_id di sini
+                'variant_id' => $variantId,
                 'jumlah'     => 1
             ]);
         }
@@ -59,20 +59,22 @@ class CartController extends Controller
 
     public function remove($id)
     {
-        CartItem::destroy($id);
-        return back()->with('success', 'Produk dihapus dari keranjang');
-    }
+        // FIX: cek kepemilikan sebelum hapus — user lain tidak bisa hapus cart orang lain
+        $cartItem = CartItem::where('cart_item_id', $id)
+            ->whereHas('cart', fn($q) => $q->where('user_id', Auth::id()))
+            ->firstOrFail();
 
-    public function checkout(Request $request)
-    {
-        // Method ini tidak digunakan lagi karena checkout via AJAX
-        // Bisa dihapus atau dibiarkan sebagai fallback
-        return back()->with('error', 'Gunakan checkout via AJAX');
+        $cartItem->delete();
+
+        return back()->with('success', 'Produk dihapus dari keranjang');
     }
 
     public function update(Request $request, $id)
     {
-        $cartItem = CartItem::findOrFail($id);
+        // FIX: cek kepemilikan sebelum update
+        $cartItem = CartItem::where('cart_item_id', $id)
+            ->whereHas('cart', fn($q) => $q->where('user_id', Auth::id()))
+            ->firstOrFail();
 
         $request->validate([
             'jumlah' => 'required|integer|min:1'
