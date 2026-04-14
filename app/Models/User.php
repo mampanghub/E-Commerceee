@@ -95,4 +95,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(UserAddress::class, 'user_id', 'user_id')->where('is_default', true);
     }
+
+    public function wishlists()
+    {
+        return $this->hasMany(Wishlist::class, 'user_id', 'user_id');
+    }
 }

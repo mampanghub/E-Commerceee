@@ -793,6 +793,17 @@
                                         </svg>
                                         Pembelian Saya
                                     </a>
+                                    <a href="{{ route('wishlist.index') }}"
+                                        style="display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;color:#475569;text-decoration:none;transition:background .15s;"
+                                        onmouseover="this.style.background='#f1f5f9'"
+                                        onmouseout="this.style.background='none'">
+                                        <svg style="width:15px;height:15px;stroke:#94a3b8;fill:none;stroke-width:2;flex-shrink:0;"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                        </svg>
+                                        Wishlist Saya
+                                    </a>
                                 </div>
                             @elseif (auth()->user()->role === 'admin')
                                 <div style="padding:6px 0;">
@@ -914,6 +925,14 @@
                             <span class="mp-bottom-nav-badge">{{ $cartCount }}</span>
                         @endif
                         Keranjang
+                    </a>
+                    <a href="{{ route('wishlist.index') }}"
+                        class="mp-bottom-nav-item {{ request()->routeIs('wishlist.*') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        Wishlist
                     </a>
                     <a href="{{ route('orders.history') }}"
                         class="mp-bottom-nav-item {{ request()->routeIs('orders.history') ? 'active' : '' }}">

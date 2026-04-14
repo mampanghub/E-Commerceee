@@ -16,6 +16,7 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\ShippingSettingController;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\WishlistController;
 use Illuminate\Http\Request;
 
 // FIX: rate limiter untuk checkout (5x/menit) dan payment (10x/menit)
@@ -100,6 +101,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile/addresses/{id}', [AddressController::class, 'destroy'])->name('addresses.destroy');
     Route::patch('/profile/addresses/{id}/default', [AddressController::class, 'setDefault'])->name('addresses.set-default');
     Route::get('/api/addresses', [AddressController::class, 'list'])->name('addresses.list');
+
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+    Route::delete('/wishlist/{id}', [WishlistController::class, 'remove'])->name('wishlist.remove');
 });
 
 // ===== KURIR =====

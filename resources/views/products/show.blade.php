@@ -34,7 +34,20 @@
         }
 
         $hasVariants = $product->variants->count() > 0;
+        $isWishlisted = auth()->check()
+            ? \App\Models\Wishlist::where('user_id', auth()->user()->user_id)
+                ->where('product_id', $product->product_id)
+                ->exists()
+            : false;
         $primaryImage = $product->primaryImage ?? $product->images->first();
+
+        // Buat map variant_id => gambar URL untuk JS
+        $variantImages = [];
+        foreach ($product->variants as $variant) {
+            $varImg = $product->images->where('variant_id', $variant->variant_id)->first();
+            $varImg = $varImg ?? $primaryImage;
+            $variantImages[$variant->variant_id] = $varImg ? asset('storage/' . $varImg->gambar) : 'https://placehold.co/600x600/f5f5f5/aaa?text=No+Image';
+        }
     @endphp
 
     <style>
@@ -44,7 +57,7 @@
 
         .pd-page {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background: #f5f5f5;
+            background: #f0f4ff;
             padding: 16px;
             min-height: 100vh;
         }
@@ -61,7 +74,7 @@
         }
 
         .pd-bc a {
-            color: #03AC0E;
+            color: #2563EB;
             text-decoration: none;
         }
 
@@ -84,7 +97,7 @@
             background: #fff;
             border-radius: 8px;
             overflow: hidden;
-            border: 1px solid #eee;
+            border: 1px solid #dbeafe;
         }
 
         .pd-main-wrap {
@@ -138,7 +151,7 @@
         }
 
         .pd-thumb.active {
-            border-bottom: 2.5px solid #03AC0E;
+            border-bottom: 2.5px solid #2563EB;
         }
 
         /* ── TENGAH: INFO ── */
@@ -146,7 +159,7 @@
             background: #fff;
             border-radius: 8px;
             padding: 20px;
-            border: 1px solid #eee;
+            border: 1px solid #dbeafe;
         }
 
         .pd-prod-name {
@@ -168,10 +181,12 @@
         }
 
         .pd-sold {
-            background: #f5f5f5;
+            background: #eff6ff;
+            color: #2563EB;
             padding: 2px 7px;
             border-radius: 4px;
             font-size: 11px;
+            font-weight: 500;
         }
 
         .pd-stars {
@@ -203,14 +218,14 @@
         .pd-price {
             font-size: 26px;
             font-weight: 700;
-            color: #111;
+            color: #1d4ed8;
             margin-bottom: 16px;
             letter-spacing: -.01em;
         }
 
         .pd-divider {
             height: 1px;
-            background: #f5f5f5;
+            background: #eff6ff;
             margin: 14px 0;
         }
 
@@ -221,7 +236,7 @@
         }
 
         .pd-v-label b {
-            color: #111;
+            color: #2563EB;
             font-weight: 500;
         }
 
@@ -249,14 +264,14 @@
         }
 
         .pd-chip:hover {
-            border-color: #03AC0E;
-            color: #03AC0E;
+            border-color: #2563EB;
+            color: #2563EB;
         }
 
         .pd-chip.active {
-            border-color: #03AC0E;
-            color: #03AC0E;
-            background: #f0fff4;
+            border-color: #2563EB;
+            color: #2563EB;
+            background: #eff6ff;
             font-weight: 500;
         }
 
@@ -289,14 +304,14 @@
         }
 
         .pd-sz:hover {
-            border-color: #03AC0E;
-            color: #03AC0E;
+            border-color: #2563EB;
+            color: #2563EB;
         }
 
         .pd-sz.active {
-            border-color: #03AC0E;
-            color: #03AC0E;
-            background: #f0fff4;
+            border-color: #2563EB;
+            color: #2563EB;
+            background: #eff6ff;
             font-weight: 500;
         }
 
@@ -307,10 +322,10 @@
         }
 
         .pd-ship-box {
-            background: #f9f9f9;
+            background: #f8faff;
             border-radius: 8px;
             padding: 12px 14px;
-            border: 1px solid #eee;
+            border: 1px solid #dbeafe;
             margin-top: 4px;
         }
 
@@ -344,7 +359,7 @@
             margin-left: auto;
             font-size: 12px;
             font-weight: 600;
-            color: #03AC0E;
+            color: #2563EB;
         }
 
         /* ── KANAN: AKSI ── */
@@ -360,7 +375,7 @@
             background: #fff;
             border-radius: 8px;
             padding: 16px;
-            border: 1px solid #eee;
+            border: 1px solid #dbeafe;
         }
 
         .pd-action-title {
@@ -374,7 +389,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            border: 1px solid #eee;
+            border: 1px solid #dbeafe;
             border-radius: 8px;
             padding: 10px 12px;
             margin-bottom: 14px;
@@ -383,16 +398,17 @@
         }
 
         .pd-sel-var:hover {
-            border-color: #03AC0E;
+            border-color: #2563EB;
         }
 
         .pd-sel-img {
             width: 38px;
             height: 38px;
             border-radius: 4px;
-            background: #f5f5f5;
+            background: #eff6ff;
             object-fit: contain;
             flex-shrink: 0;
+            transition: opacity .2s ease;
         }
 
         .pd-sel-name {
@@ -404,7 +420,7 @@
         .pd-sel-line {
             height: 2px;
             width: 28px;
-            background: #E05A1E;
+            background: #2563EB;
             border-radius: 1px;
             margin-top: 3px;
         }
@@ -435,7 +451,7 @@
         .pd-qty-ctrl {
             display: flex;
             align-items: center;
-            border: 1px solid #ddd;
+            border: 1px solid #dbeafe;
             border-radius: 6px;
             overflow: hidden;
         }
@@ -447,7 +463,7 @@
             background: #fff;
             font-size: 18px;
             font-weight: 300;
-            color: #555;
+            color: #2563EB;
             cursor: pointer;
             line-height: 1;
             transition: background .1s;
@@ -455,7 +471,7 @@
         }
 
         .pd-qty-btn:hover {
-            background: #f5f5f5;
+            background: #eff6ff;
         }
 
         .pd-qty-num {
@@ -464,8 +480,8 @@
             font-size: 14px;
             font-weight: 500;
             color: #111;
-            border-left: 1px solid #eee;
-            border-right: 1px solid #eee;
+            border-left: 1px solid #dbeafe;
+            border-right: 1px solid #dbeafe;
             height: 32px;
             line-height: 32px;
         }
@@ -476,7 +492,7 @@
         }
 
         .pd-stok b {
-            color: #E05A1E;
+            color: #2563EB;
         }
 
         .pd-subtotal-row {
@@ -484,7 +500,7 @@
             align-items: baseline;
             justify-content: space-between;
             padding-bottom: 14px;
-            border-bottom: 1px solid #f5f5f5;
+            border-bottom: 1px solid #eff6ff;
             margin-bottom: 14px;
         }
 
@@ -496,7 +512,7 @@
         .pd-sub-val {
             font-size: 20px;
             font-weight: 700;
-            color: #111;
+            color: #1d4ed8;
         }
 
         .pd-btn-cart {
@@ -504,7 +520,7 @@
             padding: 12px;
             border-radius: 8px;
             border: none;
-            background: #03AC0E;
+            background: #2563EB;
             color: #fff;
             font-size: 14px;
             font-weight: 600;
@@ -515,16 +531,16 @@
         }
 
         .pd-btn-cart:hover {
-            background: #029B0C;
+            background: #1d4ed8;
         }
 
         .pd-btn-buy {
             width: 100%;
             padding: 11px;
             border-radius: 8px;
-            border: 1.5px solid #03AC0E;
+            border: 1.5px solid #2563EB;
             background: #fff;
-            color: #03AC0E;
+            color: #2563EB;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
@@ -533,7 +549,7 @@
         }
 
         .pd-btn-buy:hover {
-            background: #f0fff4;
+            background: #eff6ff;
         }
 
         .pd-btn-disabled {
@@ -554,7 +570,7 @@
             background: #fff;
             border-radius: 8px;
             padding: 10px 16px;
-            border: 1px solid #eee;
+            border: 1px solid #dbeafe;
             display: flex;
             align-items: center;
             justify-content: space-around;
@@ -574,7 +590,7 @@
         }
 
         .pd-alink:hover {
-            background: #f5f5f5;
+            background: #eff6ff;
         }
 
         .pd-alink svg {
@@ -588,9 +604,19 @@
             background: #fff;
             border-radius: 8px;
             padding: 20px;
-            border: 1px solid #eee;
+            border: 1px solid #dbeafe;
             max-width: 1100px;
             margin: 12px auto 0;
+        }
+
+        /* Store dot */
+        .store-dot {
+            background: #2563EB !important;
+        }
+
+        /* Ship price green -> blue */
+        .shipping-price-blue {
+            color: #2563EB !important;
         }
 
         /* RESPONSIVE */
@@ -631,7 +657,7 @@
     @if (session('success'))
         <div style="max-width:1100px; margin:0 auto 12px; padding:0 0;">
             <div
-                style="padding:12px 16px; background:#f0fff4; border:1px solid #bbf7d0; color:#15803d; border-radius:8px; font-size:13px; font-weight:500;">
+                style="padding:12px 16px; background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; border-radius:8px; font-size:13px; font-weight:500;">
                 {{ session('success') }}</div>
         </div>
     @endif
@@ -642,6 +668,12 @@
                 {{ session('error') }}</div>
         </div>
     @endif
+
+    {{-- Variant images map for JS --}}
+    <script>
+        const pdVariantImages = @json($variantImages);
+        const pdDefaultImage = "{{ asset('storage/' . ($primaryImage->gambar ?? '')) }}";
+    </script>
 
     <div class="pd-page" x-data="{
         qty: 1,
@@ -654,13 +686,31 @@
         get formattedSubtotal() { return 'Rp' + new Intl.NumberFormat('id-ID').format(this.subtotal); }
     }">
 
-        {{-- BREADCRUMB --}}
-        <div class="pd-bc">
-            <a href="{{ route('dashboard') }}">Home</a>
-            <span>›</span>
-            <a href="#">{{ $product->category->nama_kategori }}</a>
-            <span>›</span>
-            <span style="color:#555;">{{ Str::limit($product->nama_produk, 40) }}</span>
+        {{-- BACK BUTTON + BREADCRUMB --}}
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap;">
+            <button onclick="history.back()"
+                style="display:inline-flex; align-items:center; gap:6px;
+                       padding:6px 14px 6px 10px;
+                       background:#fff; border:1px solid #dbeafe;
+                       border-radius:8px; font-size:13px; font-weight:500;
+                       color:#2563EB; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif;
+                       transition:background .12s, box-shadow .12s;
+                       box-shadow:0 1px 3px rgba(37,99,235,.07);"
+                onmouseover="this.style.background='#eff6ff'; this.style.boxShadow='0 2px 8px rgba(37,99,235,.13)';"
+                onmouseout="this.style.background='#fff'; this.style.boxShadow='0 1px 3px rgba(37,99,235,.07)';">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Kembali
+            </button>
+
+            <div class="pd-bc" style="margin-bottom:0;">
+                <a href="{{ route('dashboard') }}">Home</a>
+                <span>›</span>
+                <a href="#">{{ $product->category->nama_kategori }}</a>
+                <span>›</span>
+                <span style="color:#555;">{{ Str::limit($product->nama_produk, 40) }}</span>
+            </div>
         </div>
 
         {{-- 3-COLUMN LAYOUT --}}
@@ -695,7 +745,7 @@
                     <div
                         style="display:flex; align-items:center; gap:6px; font-size:12px; color:#888; margin-bottom:10px; flex-wrap:wrap;">
                         <span
-                            style="width:7px; height:7px; border-radius:50%; background:#22C55E; display:inline-block;"></span>
+                            style="width:7px; height:7px; border-radius:50%; background:#2563EB; display:inline-block;"></span>
                         <span style="font-weight:500; color:#333;">{{ $store->nama_toko }}</span>
                         @if ($store->city)
                             <span style="color:#ddd;">·</span>
@@ -718,7 +768,6 @@
                             ->whereHas('order', fn($q) => $q->whereIn('status', ['selesai', 'dikirim', 'diproses']))
                             ->sum('jumlah') ?? 0;
 
-                    // Hitung semua opsi ongkir untuk Info Penting
                     $allShippingOptions = \App\Models\ShippingOption::orderBy('kurang_hari', 'asc')->get();
                     $shippingRows = [];
 
@@ -763,7 +812,6 @@
 
                     @if ($totalReviews > 0)
                         <span class="pd-stars" style="display:flex; align-items:center; gap:3px;">
-                            {{-- bintang penuh --}}
                             @for ($i = 0; $i < $fullStars; $i++)
                                 <svg style="width:13px;height:13px;color:#F59E0B;flex-shrink:0;" fill="currentColor"
                                     viewBox="0 0 20 20">
@@ -771,7 +819,6 @@
                                         d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                 </svg>
                             @endfor
-                            {{-- setengah bintang --}}
                             @if ($halfStar)
                                 <svg style="width:13px;height:13px;flex-shrink:0;" viewBox="0 0 20 20">
                                     <defs>
@@ -784,7 +831,6 @@
                                         d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                 </svg>
                             @endif
-                            {{-- bintang kosong --}}
                             @for ($i = 0; $i < $emptyStars; $i++)
                                 <svg style="width:13px;height:13px;color:#e5e7eb;flex-shrink:0;" fill="currentColor"
                                     viewBox="0 0 20 20">
@@ -816,7 +862,7 @@
                     <div class="pd-chips">
                         @foreach ($product->variants as $variant)
                             <div class="pd-chip {{ $variant->stok == 0 ? 'disabled' : '' }}"
-                                @if ($variant->stok > 0) onclick="pdSelectVariant(this, '{{ $variant->nama_varian }}', {{ $product->harga + $variant->harga_tambahan }}, {{ $variant->stok }})"
+                                @if ($variant->stok > 0) onclick="pdSelectVariant(this, '{{ $variant->nama_varian }}', {{ $product->harga + $variant->harga_tambahan }}, {{ $variant->stok }}, {{ $variant->variant_id }})"
                                  x-on:click="
                                      price = {{ $product->harga + $variant->harga_tambahan }};
                                      maxStock = {{ $variant->stok }};
@@ -840,7 +886,7 @@
                 <div class="pd-ship-box">
                     <div class="pd-ship-title">Pengiriman</div>
                     <div class="pd-ship-row">
-                        <svg width="20" height="20" fill="none" stroke="#555" stroke-width="1.5"
+                        <svg width="20" height="20" fill="none" stroke="#2563EB" stroke-width="1.5"
                             viewBox="0 0 24 24" style="flex-shrink:0;">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
@@ -863,18 +909,16 @@
 
                 <div style="font-size:13px; font-weight:600; color:#111; margin-bottom:12px;">Info Penting</div>
 
-                {{-- Tab header --}}
                 <div style="display:flex; border-bottom:2px solid #f0f0f0; margin-bottom:14px; gap:0;">
                     <button
-                        style="padding:8px 16px; font-size:13px; font-weight:600; color:#03AC0E;
+                        style="padding:8px 16px; font-size:13px; font-weight:600; color:#2563EB;
                    border:none; background:none; cursor:default;
-                   border-bottom:2px solid #03AC0E; margin-bottom:-2px;
+                   border-bottom:2px solid #2563EB; margin-bottom:-2px;
                    font-family:'Plus Jakarta Sans',sans-serif;">
                         Pengiriman
                     </button>
                 </div>
 
-                {{-- Dikirim dari --}}
                 <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:14px;">
                     <svg width="16" height="16" fill="none" stroke="#888" stroke-width="1.5"
                         viewBox="0 0 24 24" style="flex-shrink:0; margin-top:2px;">
@@ -892,7 +936,6 @@
                     </div>
                 </div>
 
-                {{-- Tabel ongkir --}}
                 @if (count($shippingRows) > 0)
                     <div style="display:flex; align-items:flex-start; gap:10px;">
                         <svg width="16" height="16" fill="none" stroke="#888" stroke-width="1.5"
@@ -916,7 +959,7 @@
                                         </div>
                                     </div>
                                     <span
-                                        style="font-size:13px; font-weight:600; color:#03AC0E; white-space:nowrap; margin-left:12px;">
+                                        style="font-size:13px; font-weight:600; color:#2563EB; white-space:nowrap; margin-left:12px;">
                                         Rp{{ number_format($row['harga'], 0, ',', '.') }}
                                     </span>
                                 </div>
@@ -926,8 +969,8 @@
                 @else
                     <div
                         style="display:flex; align-items:center; gap:8px; padding:10px 12px;
-                background:#fafafa; border-radius:8px; border:1px solid #f0f0f0;">
-                        <svg width="14" height="14" fill="none" stroke="#aaa" stroke-width="1.5"
+                background:#f8faff; border-radius:8px; border:1px solid #dbeafe;">
+                        <svg width="14" height="14" fill="none" stroke="#93c5fd" stroke-width="1.5"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -944,7 +987,8 @@
 
                     {{-- Selected variant preview --}}
                     <div class="pd-sel-var">
-                        <img class="pd-sel-img" src="{{ asset('storage/' . ($primaryImage->gambar ?? '')) }}"
+                        <img id="pdActionImg" class="pd-sel-img"
+                            src="{{ asset('storage/' . ($primaryImage->gambar ?? '')) }}"
                             onerror="this.src='https://placehold.co/76x76/f5f5f5/aaa?text=?'" alt="">
                         <div style="flex:1;">
                             <div class="pd-sel-name">
@@ -1017,20 +1061,28 @@
                 </div>
 
                 <div class="pd-links-card">
-                    <a href="#" class="pd-alink">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                        Chat
-                    </a>
-                    <a href="#" class="pd-alink">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                        Wishlist
-                    </a>
+                    @auth
+                        <button onclick="pdToggleWishlist(this)" data-product-id="{{ $product->product_id }}"
+                            data-wishlisted="{{ $isWishlisted ? '1' : '0' }}" class="pd-alink"
+                            style="background:none; border:none; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif;">
+                            <svg fill="{{ $isWishlisted ? '#ef4444' : 'none' }}"
+                                stroke="{{ $isWishlisted ? '#ef4444' : 'currentColor' }}" viewBox="0 0 24 24"
+                                style="width:15px;height:15px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                            <span id="wishlist-label">{{ $isWishlisted ? 'Wishlisted' : 'Wishlist' }}</span>
+                        </button>
+                    @else
+                        <a href="{{ route('login') }}" class="pd-alink">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                style="width:15px;height:15px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                            Wishlist
+                        </a>
+                    @endauth
                 </div>
             </div>
 
@@ -1047,7 +1099,6 @@
 
     </div>
 
-    {{-- SweetAlert success --}}
     @if (session('success'))
         <script>
             document.addEventListener('DOMContentLoaded', function() {
@@ -1103,9 +1154,35 @@
             thumb.classList.add('active');
         }
 
-        function pdSelectVariant(el, name, price, stock) {
+        /**
+         * pdSelectVariant — dipanggil saat chip varian diklik
+         * Juga mengupdate foto di panel kanan (pdActionImg) & foto utama galeri
+         */
+        function pdSelectVariant(el, name, price, stock, variantId) {
+            // Update chips active state
             document.querySelectorAll('.pd-chip:not(.disabled)').forEach(c => c.classList.remove('active'));
             el.classList.add('active');
+
+            // Update foto panel kanan
+            const actionImg = document.getElementById('pdActionImg');
+            if (actionImg && pdVariantImages[variantId]) {
+                actionImg.style.opacity = '0';
+                setTimeout(() => {
+                    actionImg.src = pdVariantImages[variantId];
+                    actionImg.style.opacity = '1';
+                }, 120);
+            }
+
+            // Update foto utama galeri juga
+            const mainImg = document.getElementById('pdMainImg');
+            if (mainImg && pdVariantImages[variantId]) {
+                mainImg.style.opacity = '0';
+                setTimeout(() => {
+                    mainImg.src = pdVariantImages[variantId];
+                    mainImg.style.opacity = '1';
+                    mainImg.style.transition = 'opacity .2s ease';
+                }, 120);
+            }
         }
 
         function pdSubmitCart() {
@@ -1114,6 +1191,46 @@
             document.getElementById('cartVariantId').value = f.querySelector('[name=variant_id]').value;
             document.getElementById('cartQty').value = f.querySelector('[name=quantity]').value;
             document.getElementById('cartForm').submit();
+        }
+
+        async function pdToggleWishlist(btn) {
+            const productId = btn.dataset.productId;
+            const svg = btn.querySelector('svg');
+            const label = btn.querySelector('span');
+
+            try {
+                const res = await fetch('{{ route('wishlist.toggle') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        product_id: productId
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (data.wishlisted) {
+                    svg.setAttribute('fill', '#ef4444');
+                    svg.setAttribute('stroke', '#ef4444');
+                    label.textContent = 'Wishlisted';
+                    btn.dataset.wishlisted = '1';
+                } else {
+                    svg.setAttribute('fill', 'none');
+                    svg.setAttribute('stroke', 'currentColor');
+                    label.textContent = 'Wishlist';
+                    btn.dataset.wishlisted = '0';
+                }
+
+                const badge = document.getElementById('wishlist-nav-count');
+                if (badge) badge.textContent = data.count;
+
+            } catch (e) {
+                console.error(e);
+            }
         }
     </script>
 

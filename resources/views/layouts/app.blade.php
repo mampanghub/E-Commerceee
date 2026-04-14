@@ -309,6 +309,7 @@
                                     <li><a href="{{ route('cart.index') }}">Keranjang</a></li>
                                     <li><a href="{{ route('orders.history') }}">Pesanan Saya</a></li>
                                     <li><a href="{{ route('profile.edit') }}">Akun Saya</a></li>
+                                    <li><a href="{{ route('wishlist.index') }}">Wishlist</a></li>
                                 </ul>
                             @endif
                         @else
