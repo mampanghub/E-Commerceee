@@ -43,14 +43,25 @@ class CartController extends Controller
             ->where('variant_id', $variantId)
             ->first();
 
+        // SESUDAH
         if ($cartItem) {
-            $cartItem->update(['jumlah' => $cartItem->jumlah + 1]);
+            $cartItem->update(['jumlah' => $cartItem->jumlah + ($request->quantity ?? 1)]);
         } else {
             CartItem::create([
                 'cart_id'    => $cart->cart_id,
                 'product_id' => $product->product_id,
                 'variant_id' => $variantId,
-                'jumlah'     => 1
+                'jumlah'     => $request->quantity ?? 1
+            ]);
+        }
+
+        if ($request->wantsJson()) {
+            $cartCount = CartItem::whereHas('cart', fn($q) => $q->where('user_id', Auth::id()))->sum('jumlah');
+
+            return response()->json([
+                'success'    => true,
+                'message'    => 'Produk berhasil ditambahkan ke keranjang.',
+                'cart_count' => $cartCount,
             ]);
         }
 

@@ -1197,12 +1197,72 @@
             }
         }
 
-        function pdSubmitCart() {
+        // GANTI dengan ini:
+        async function pdSubmitCart() {
             const f = document.getElementById('purchaseForm');
-            document.getElementById('cartProductId').value = f.querySelector('[name=product_id]').value;
-            document.getElementById('cartVariantId').value = f.querySelector('[name=variant_id]').value;
-            document.getElementById('cartQty').value = f.querySelector('[name=quantity]').value;
-            document.getElementById('cartForm').submit();
+            const productId = f.querySelector('[name=product_id]').value;
+            const variantId = f.querySelector('[name=variant_id]').value;
+            const qty = f.querySelector('[name=quantity]').value;
+
+            try {
+                const res = await fetch('{{ route('cart.add') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        variant_id: variantId || null,
+                        quantity: qty,
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok && (data.success || data.message)) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: data.message ?? 'Produk berhasil ditambahkan ke keranjang.',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        position: 'center',
+                        customClass: {
+                            popup: 'rounded-2xl'
+                        }
+                    });
+
+                    // Update badge keranjang jika ada
+                    if (data.cart_count !== undefined) {
+                        const badge = document.getElementById('cart-nav-count');
+                        if (badge) badge.textContent = data.cart_count;
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: data.message ?? 'Gagal menambahkan ke keranjang.',
+                        confirmButtonText: 'Oke',
+                        position: 'center',
+                        customClass: {
+                            popup: 'rounded-2xl'
+                        }
+                    });
+                }
+            } catch (e) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Terjadi kesalahan. Silakan coba lagi.',
+                    confirmButtonText: 'Oke',
+                    position: 'center',
+                    customClass: {
+                        popup: 'rounded-2xl'
+                    }
+                });
+            }
         }
 
         async function pdToggleWishlist(btn) {
