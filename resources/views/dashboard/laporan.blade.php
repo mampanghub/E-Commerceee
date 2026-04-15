@@ -118,7 +118,7 @@
                 @endforeach
             </div>
         </div>
-        
+
         {{-- PRODUK TERLARIS --}}
         <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-100">
@@ -315,10 +315,91 @@
 
 <style>
     @media print {
-        .no-print, nav, header { display: none !important; }
-        body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .max-w-6xl { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
-        .rounded-2xl { border-radius: 0 !important; }
+        /* Sembunyikan elemen interaktif */
+        .no-print,
+        nav,
+        header { display: none !important; }
+
+        /* Reset background halaman */
+        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body { background: white !important; margin: 0; }
+
+        /* Layout penuh */
+        .min-h-screen { min-height: unset !important; background: white !important; }
+        .max-w-6xl { max-width: 100% !important; padding: 0 1.5cm !important; margin: 0 !important; }
+
+        /* Header cetak — ganti style dark dengan yang formal */
+        .bg-white.border-b { border-bottom: 2px solid #111 !important; padding: 1cm 0 0.4cm !important; }
+        .bg-white.border-b .w-10.h-10 { display: none !important; } /* sembunyikan ikon biru */
+        .bg-white.border-b h1 { font-size: 20pt !important; color: #000 !important; }
+        .bg-white.border-b p { color: #444 !important; }
+
+        /* Tambah info cetak otomatis */
+        .bg-white.border-b::after {
+            content: "Dicetak pada: " attr(data-print-date);
+            display: block;
+            font-size: 9pt;
+            color: #666;
+            padding: 4px 0;
+        }
+
+        /* Stat cards: hilangkan border-radius dan warna */
+        .grid .bg-white {
+            border: 1px solid #ccc !important;
+            border-radius: 0 !important;
+            break-inside: avoid;
+        }
+        .text-blue-600 { color: #000 !important; }
+
+        /* Progress bar breakdown status: cetak sebagai teks saja */
+        .flex-1.bg-slate-100.rounded-full { display: none !important; }
+
+        /* Tabel transaksi: formal */
+        table { border-collapse: collapse !important; width: 100% !important; }
+        thead tr { background: #111 !important; color: white !important; }
+        th { padding: 6pt 8pt !important; font-size: 9pt !important; border: 1px solid #999 !important; }
+        td { padding: 5pt 8pt !important; font-size: 9pt !important; border: 1px solid #ddd !important; color: #000 !important; }
+        tbody tr:nth-child(even) { background: #f5f5f5 !important; }
+
+        /* Badge status: hilangkan warna, pakai teks polos */
+        td span[class*="bg-"] {
+            background: none !important;
+            color: #000 !important;
+            padding: 0 !important;
+            border: none !important;
+            font-weight: 700;
+        }
+
+        /* Link order: hitam, tanpa underline */
+        a { color: #000 !important; text-decoration: none !important; }
+
+        /* Footer total: rapi */
+        .bg-slate-50.border-t { background: white !important; border-top: 2px solid #111 !important; }
+
+        /* Produk terlaris: tampilkan bersih */
+        .rounded-2xl { border-radius: 0 !important; border: 1px solid #ccc !important; }
+
+        /* Paksa page break yang baik */
+        .grid { break-inside: avoid; }
+        .overflow-x-auto { overflow: visible !important; }
+
+        /* Tambah area tanda tangan di akhir */
+        .bg-slate-50.border-t::after {
+            content: "";
+            display: block;
+            margin-top: 2cm;
+            padding-top: 0.5cm;
+            border-top: 1px solid #aaa;
+            font-size: 9pt;
+            color: #555;
+        }
     }
 </style>
+<script>
+    // Set tanggal cetak di header
+    document.querySelector('.bg-white.border-b')
+        ?.setAttribute('data-print-date',
+            new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'}) + ' WIB'
+        );
+</script>
 </x-app-layout>

@@ -65,6 +65,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/admin/users/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::get('/admin/shipping-settings', [ShippingSettingController::class, 'index'])->name('admin.shipping-settings.index');
     Route::put('/admin/shipping-settings', [ShippingSettingController::class, 'update'])->name('admin.shipping-settings.update');
+    Route::patch('/profile/store', [ProfileController::class, 'updateStore'])->name('profile.store.update');
 });
 
 // ===== PEMBELI =====

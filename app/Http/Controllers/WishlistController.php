@@ -31,19 +31,22 @@ class WishlistController extends Controller
 
         if ($existing) {
             $existing->delete();
+            $status = 'removed';
             $wishlisted = false;
         } else {
             Wishlist::create([
                 'user_id'    => $user->user_id,
                 'product_id' => $productId,
             ]);
+            $status = 'added';
             $wishlisted = true;
         }
 
         if ($request->expectsJson()) {
             return response()->json([
-                'wishlisted' => $wishlisted,
-                'count'      => $user->wishlists()->count(),
+                'status' => $status,           // Untuk dashboard
+                'wishlisted' => $wishlisted,   // Untuk product detail
+                'count' => $user->wishlists()->count(),
             ]);
         }
 
@@ -52,10 +55,14 @@ class WishlistController extends Controller
 
     public function remove($id)
     {
-        Wishlist::where('wishlist_id', $id)
+        $deleted = Wishlist::where('wishlist_id', $id)
             ->where('user_id', auth()->user()->user_id)
             ->delete();
 
-        return back()->with('success', 'Dihapus dari wishlist.');
+        if ($deleted > 0) {
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['success' => false], 404);
     }
 }

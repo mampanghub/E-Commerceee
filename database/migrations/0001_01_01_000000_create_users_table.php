@@ -18,6 +18,7 @@ return new class extends Migration
             $table->decimal('saldo', 12, 2)->default(0);
             $table->string('no_telp', 20)->nullable();
             $table->string('password');
+            $table->rememberToken()->nullable();
             $table->enum('role', ['admin', 'pembeli', 'kurir'])->default('pembeli');
             $table->string('province_id')->nullable();
             $table->string('city_id')->nullable();
@@ -30,9 +31,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('user');

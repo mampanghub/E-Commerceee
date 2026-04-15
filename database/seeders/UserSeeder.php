@@ -24,20 +24,6 @@ class UserSeeder extends Seeder
 
         $this->command->info('User admin berhasil dibuat! Email: admin@gmail.com | Password: admin123');
 
-        // ── CONTOH PEMBELI (opsional, hapus kalau tidak perlu) ──
-        User::updateOrCreate(
-            ['email' => 'pembeli@gmail.com'],
-            [
-                'name'     => 'Pembeli Test',
-                'email'    => 'pembeli@gmail.com',
-                'password' => Hash::make('pembeli123'),
-                'role'     => 'pembeli',
-                'no_telp'  => '089876543210',
-            ]
-        );
-
-        $this->command->info('User pembeli berhasil dibuat! Email: pembeli@gmail.com | Password: pembeli123');
-
         User::updateOrCreate(
             ['email' => 'kurir@gmail.com'],
             [

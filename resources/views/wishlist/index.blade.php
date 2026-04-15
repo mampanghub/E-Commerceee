@@ -105,6 +105,7 @@
             cursor: pointer;
             transition: all .15s;
             backdrop-filter: blur(4px);
+            z-index: 20;
         }
 
         .wl-remove-btn:hover {
@@ -195,10 +196,12 @@
                         $prod = $wl->product;
                         $img = $prod->primaryImage ?? $prod->images->first();
                     @endphp
-                    <div class="wl-card">
-                        {{-- Hapus dari wishlist --}}
+
+                    <div class="wl-card" style="position: relative;"> {{-- Pastikan relative --}}
+
+                        {{-- Tombol Hapus (Taruh di luar tag <a> agar tidak bentrok) --}}
                         <form method="POST" action="{{ route('wishlist.remove', $wl->wishlist_id) }}"
-                            style="display:contents;">
+                            style="margin: 0;">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="wl-remove-btn" title="Hapus dari wishlist">
@@ -208,8 +211,9 @@
                             </button>
                         </form>
 
+                        {{-- Link Produk --}}
                         <a href="{{ route('products.show', $prod->product_id) }}"
-                            style="text-decoration:none;color:inherit;display:block;">
+                            style="text-decoration:none; color:inherit; display:block; z-index: 10; position: relative;">
                             <div class="wl-card-img">
                                 <img src="{{ asset('storage/' . ($img->gambar ?? '')) }}"
                                     onerror="this.src='https://placehold.co/400x400/f5f5f5/aaa?text=No+Image'"

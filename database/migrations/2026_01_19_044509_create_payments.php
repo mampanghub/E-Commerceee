@@ -13,6 +13,7 @@ return new class extends Migration
             $table->unsignedBigInteger('order_id');
             $table->string('metode_pembayaran');
             $table->enum('status', ['pending', 'berhasil', 'gagal']);
+            $table->timestamp('tanggal_bayar')->nullable();
             $table->timestamps();
 
             $table->foreign('order_id')

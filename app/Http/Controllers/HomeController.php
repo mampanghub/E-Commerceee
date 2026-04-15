@@ -77,20 +77,29 @@ class HomeController extends Controller
             }
 
             $tahunTersedia = Order::selectRaw('YEAR(created_at) as tahun')->groupBy('tahun')->orderByDesc('tahun')->pluck('tahun');
+
             $bulanTersedia = collect();
             foreach ($tahunTersedia as $thn) {
                 $bulanDalamTahun = Order::whereYear('created_at', $thn)->selectRaw('MONTH(created_at) as bulan')->groupBy('bulan')->orderBy('bulan')->pluck('bulan');
                 foreach ($bulanDalamTahun as $bln) {
                     $bulanTersedia->push([
                         'value' => $thn . '-' . str_pad($bln, 2, '0', STR_PAD_LEFT),
-                        'label' => \Carbon\Carbon::createFromDate($thn, $bln, 1)->translatedFormat('F Y'),
+                        // DIUBAH DISINI: Hapus 'Y' agar hanya nama bulan yang muncul di label
+                        'label' => \Carbon\Carbon::createFromDate($thn, $bln, 1)->translatedFormat('F'),
                     ]);
                 }
             }
 
             return view('dashboard.admin', compact(
-                'totalCuanAdmin', 'pendapatanProduk', 'totalOngkir', 'totalPembeli',
-                'grafikData', 'tahunTersedia', 'bulanTersedia', 'filterBulan', 'filterTahun',
+                'totalCuanAdmin',
+                'pendapatanProduk',
+                'totalOngkir',
+                'totalPembeli',
+                'grafikData',
+                'tahunTersedia',
+                'bulanTersedia',
+                'filterBulan',
+                'filterTahun',
             ));
         }
 
@@ -98,7 +107,6 @@ class HomeController extends Controller
             return redirect()->route('kurir.index');
         }
 
-        // FIX: ganti ->get() ke ->paginate(12) supaya tidak load semua produk sekaligus
         $query = Product::with(['primaryImage', 'category', 'store'])
             ->withAvg('reviews', 'bintang')
             ->withCount('reviews')
@@ -120,12 +128,15 @@ class HomeController extends Controller
             $query->latest();
         }
 
-        // FIX: paginate 12 produk per halaman, bukan load semua sekaligus
-        $products  = $query->paginate(12)->withQueryString();
+        $products   = $query->paginate(12)->withQueryString();
         $categories = Category::all();
         $cartCount  = Cart::where('user_id', auth()->id())->count();
 
-        return view('dashboard.pembeli', compact('products', 'categories', 'cartCount'));
+        $wishlistIds = \App\Models\Wishlist::where('user_id', auth()->id())
+            ->pluck('product_id')
+            ->toArray();
+
+        return view('dashboard.pembeli', compact('products', 'categories', 'cartCount', 'wishlistIds'));
     }
 
     public function laporan(Request $request)
@@ -136,7 +147,7 @@ class HomeController extends Controller
 
         if ($request->filled('dari') && $request->filled('sampai')) {
             $query->whereDate('created_at', '>=', $request->dari)
-                  ->whereDate('created_at', '<=', $request->sampai);
+                ->whereDate('created_at', '<=', $request->sampai);
         }
 
         $orders = $query->get();
@@ -150,7 +161,7 @@ class HomeController extends Controller
 
             if ($request->filled('dari') && $request->filled('sampai')) {
                 $q->whereDate('created_at', '>=', $request->dari)
-                  ->whereDate('created_at', '<=', $request->sampai);
+                    ->whereDate('created_at', '<=', $request->sampai);
             }
 
             $grafikData->push([

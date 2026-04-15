@@ -8,12 +8,19 @@ use App\Models\Cart;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ShippingOption;
+use App\Models\UserAddress;
+use App\Models\StockLog;
+use App\Models\Payment;
 use App\Services\ShippingService;
 use Midtrans\Config;
 use Midtrans\Snap;
+use App\Models\User;
+use Midtrans\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
 use Exception;
 
 class OrderController extends Controller
@@ -36,7 +43,7 @@ class OrderController extends Controller
                 ->with('error', 'Tambahkan alamat pengiriman dulu sebelum checkout!');
         }
 
-        $addresses = \App\Models\UserAddress::where('user_id', $user->user_id)
+        $addresses = UserAddress::where('user_id', $user->user_id)
             ->with(['province', 'city', 'district', 'village'])->orderByDesc('is_default')->get();
 
         ['items' => $items, 'totalProduk' => $totalProduk, 'beratGram' => $beratGram, 'storeProvinceId' => $storeProvinceId]
@@ -116,13 +123,13 @@ class OrderController extends Controller
             $ongkir = $this->shippingService->hitungOngkirFinal($ongkirDasar, $shippingOption);
             $totalAkhir = $totalProduk + $ongkir + $biayaAdmin;
 
-            [$estimasiMin, $estimasiMax] = app(\App\Services\ShippingService::class)
+            [$estimasiMin, $estimasiMax] = app(ShippingService::class)
                 ->hitungEstimasiRange($zone, $shippingOption);
 
             $estimasiTiba = now()->addDays($estimasiMin)->toDateString();
             $estimasiTibaMax = now()->addDays($estimasiMax)->toDateString();
 
-            \Cache::put("pending_order_{$user->user_id}", [
+            Cache::put("pending_order_{$user->user_id}", [
                 'user_id' => $user->user_id,
                 'items' => $itemsToProcess,
                 'ongkir' => $ongkir,
@@ -169,7 +176,7 @@ class OrderController extends Controller
             $opsiOngkir = $shippingData['options'];
             $selectedOptionId = $shippingOption->option_id;
 
-            $addresses = \App\Models\UserAddress::where('user_id', $user->user_id)
+            $addresses = UserAddress::where('user_id', $user->user_id)
                 ->with(['province', 'city', 'district', 'village'])
                 ->orderByDesc('is_default')
                 ->get();
@@ -208,17 +215,19 @@ class OrderController extends Controller
         }
 
         if (in_array($request->transaction_status, ['capture', 'settlement'])) {
-            $parts = explode('-', $request->order_id); // TMP-{user_id}-{timestamp}
+            $parts = explode('-', $request->order_id);
             $userId = $parts[1] ?? null;
 
             if (!$userId)
                 return response()->json(['message' => 'Invalid order'], 400);
 
-            $pending = \Cache::get("pending_order_{$userId}");
+            $pending = Cache::get("pending_order_{$userId}");
             if (!$pending)
                 return response()->json(['message' => 'Pending order not found'], 404);
 
-            DB::transaction(function () use ($request, $pending) {
+            $order = null;
+
+            DB::transaction(function () use ($request, $pending, &$order) {
                 $order = Order::create([
                     'user_id' => $pending['user_id'],
                     'total_harga' => $pending['total_harga'],
@@ -250,7 +259,7 @@ class OrderController extends Controller
                         : Product::find($item['product_id']);
                     $stokLama = $model->stok;
                     $model->update(['stok' => $stokLama - $item['jumlah']]);
-                    \App\Models\StockLog::create([
+                    StockLog::create([
                         'variant_id' => $item['variant_id'],
                         'stok_lama' => $stokLama,
                         'stok_baru' => $stokLama - $item['jumlah'],
@@ -260,7 +269,7 @@ class OrderController extends Controller
                     ]);
                 }
 
-                \App\Models\Payment::create([
+                Payment::create([
                     'order_id' => $order->order_id,
                     'metode_pembayaran' => $request->payment_type ?? 'unknown',
                     'status' => 'berhasil',
@@ -271,12 +280,19 @@ class OrderController extends Controller
                     $cart?->items()->delete();
                 }
 
-                $order->load(['user', 'items.product', 'items.variant', 'payment', 'shippingZone', 'shippingOption']);
-                \Illuminate\Support\Facades\Mail::to($order->user->email)
-                    ->queue(new \App\Mail\InvoiceMail($order));
-
-                \Cache::forget("pending_order_{$pending['user_id']}");
+                Cache::forget("pending_order_{$pending['user_id']}");
             });
+
+            // Kirim email di luar transaction agar gagal email tidak rollback order
+            if ($order) {
+                try {
+                    $order->load(['user', 'items.product', 'items.variant', 'payment', 'shippingZone', 'shippingOption']);
+                    Mail::to($order->user->email)
+                        ->send(new \App\Mail\InvoiceMail($order));
+                } catch (\Exception $e) {
+                    \Log::error('Gagal kirim email invoice: ' . $e->getMessage());
+                }
+            }
         }
 
         return response()->json(['message' => 'OK']);
@@ -300,12 +316,12 @@ class OrderController extends Controller
             'kurir',
         ])->findOrFail($id);
 
-        \Midtrans\Config::$serverKey = config('midtrans.server_key');
-        \Midtrans\Config::$isProduction = config('midtrans.is_production', false);
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = config('midtrans.is_production', false);
 
         if ($order->status == 'menunggu') {
             try {
-                $statusMidtrans = \Midtrans\Transaction::status($order->order_id);
+                $statusMidtrans = Transaction::status($order->order_id);
                 $transaction = $statusMidtrans->transaction_status;
                 if (in_array($transaction, ['settlement', 'capture'])) {
                     $order->update(['status' => 'dibayar']);
@@ -313,7 +329,7 @@ class OrderController extends Controller
                     $order->update(['status' => 'batal']);
                 }
                 $order->refresh();
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 logger("Cek status gagal: " . $e->getMessage());
             }
         }
@@ -437,7 +453,7 @@ class OrderController extends Controller
                 $model = $item->variant_id ? $item->variant : $item->product;
                 $stokLama = $model->stok;
                 $model->update(['stok' => $stokLama + $item->jumlah]);
-                \App\Models\StockLog::create([
+                StockLog::create([
                     'variant_id' => $item->variant_id,
                     'stok_lama' => $stokLama,
                     'stok_baru' => $stokLama + $item->jumlah,
@@ -476,7 +492,7 @@ class OrderController extends Controller
 
                 // Bayar ongkir ke kurir
                 if ($order->kurir_id) {
-                    \App\Models\User::where('user_id', $order->kurir_id)
+                    User::where('user_id', $order->kurir_id)
                         ->increment('saldo', $order->ongkir);
                 }
             });
@@ -516,17 +532,17 @@ class OrderController extends Controller
     // ─────────────────────────────────────────────
     // HELPER: resolve alamat yang dipakai checkout
     // ─────────────────────────────────────────────
-    private function resolveAddress($request, $user): ?\App\Models\UserAddress
+    private function resolveAddress($request, $user): ?UserAddress
     {
         if ($request->filled('address_id')) {
-            $addr = \App\Models\UserAddress::where('address_id', $request->address_id)
+            $addr = UserAddress::where('address_id', $request->address_id)
                 ->where('user_id', $user->user_id)
                 ->with(['province', 'city', 'district', 'village'])
                 ->first();
             if ($addr)
                 return $addr;
         }
-        return \App\Models\UserAddress::where('user_id', $user->user_id)
+        return UserAddress::where('user_id', $user->user_id)
             ->where('is_default', true)
             ->with(['province', 'city', 'district', 'village'])
             ->first();

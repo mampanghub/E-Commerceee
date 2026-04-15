@@ -62,4 +62,37 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+
+    // ProfileController.php
+
+public function updateStore(Request $request)
+{
+    $request->validate([
+        'nama_toko'   => 'required|string|max:255',
+        'deskripsi'   => 'nullable|string',
+        'province_id' => 'required',
+        'city_id'     => 'required',
+        'district_id' => 'required',
+        'village_id'  => 'required',
+        'alamat'      => 'required|string|max:500',
+    ]);
+
+    $store = auth()->user()->store;
+
+    if (!$store) {
+        return back()->with('error', 'Toko tidak ditemukan.');
+    }
+
+    $store->update([
+        'nama_toko'   => $request->nama_toko,
+        'deskripsi'   => $request->deskripsi,
+        'province_id' => $request->province_id,
+        'city_id'     => $request->city_id,
+        'district_id' => $request->district_id,
+        'village_id'  => $request->village_id,
+        'alamat'      => $request->alamat,
+    ]);
+
+    return back()->with('success', 'Informasi toko berhasil diperbarui!');
+}
 }

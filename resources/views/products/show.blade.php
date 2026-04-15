@@ -41,12 +41,17 @@
             : false;
         $primaryImage = $product->primaryImage ?? $product->images->first();
 
+        // Deduplikasi images untuk galeri thumbnail (foto sama tidak tampil 2x)
+        $uniqueImages = $product->images->unique('gambar')->values();
+
         // Buat map variant_id => gambar URL untuk JS
         $variantImages = [];
         foreach ($product->variants as $variant) {
             $varImg = $product->images->where('variant_id', $variant->variant_id)->first();
             $varImg = $varImg ?? $primaryImage;
-            $variantImages[$variant->variant_id] = $varImg ? asset('storage/' . $varImg->gambar) : 'https://placehold.co/600x600/f5f5f5/aaa?text=No+Image';
+            $variantImages[$variant->variant_id] = $varImg
+                ? asset('storage/' . $varImg->gambar)
+                : 'https://placehold.co/600x600/f5f5f5/aaa?text=No+Image';
         }
     @endphp
 
@@ -105,6 +110,8 @@
             aspect-ratio: 1;
             background: #fafafa;
             overflow: hidden;
+            cursor: zoom-in;
+            position: relative;
         }
 
         .pd-main-wrap img {
@@ -112,11 +119,15 @@
             height: 100%;
             object-fit: contain;
             padding: 20px;
-            transition: transform .4s ease;
+            transition: transform .2s ease;
+            transform-origin: center center;
+            pointer-events: none;
+            user-select: none;
+            will-change: transform;
         }
 
         .pd-main-wrap:hover img {
-            transform: scale(1.05);
+            transform: scale(1.35);
         }
 
         .pd-thumbs {
@@ -698,8 +709,9 @@
                        box-shadow:0 1px 3px rgba(37,99,235,.07);"
                 onmouseover="this.style.background='#eff6ff'; this.style.boxShadow='0 2px 8px rgba(37,99,235,.13)';"
                 onmouseout="this.style.background='#fff'; this.style.boxShadow='0 1px 3px rgba(37,99,235,.07)';">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
                 Kembali
             </button>
@@ -718,15 +730,15 @@
 
             {{-- KIRI: GALERI --}}
             <div class="pd-col-gallery">
-                <div class="pd-main-wrap">
+                <div class="pd-main-wrap" id="pdMainWrap">
                     <img id="pdMainImg" src="{{ asset('storage/' . ($primaryImage->gambar ?? '')) }}"
                         onerror="this.src='https://placehold.co/600x600/f5f5f5/aaa?text=No+Image'"
                         alt="{{ $product->nama_produk }}">
                 </div>
 
-                @if ($product->images->count() > 1)
+                @if ($uniqueImages->count() > 1)
                     <div class="pd-thumbs">
-                        @foreach ($product->images->take(5) as $i => $img)
+                        @foreach ($uniqueImages->take(5) as $i => $img)
                             <div class="pd-thumb {{ $i === 0 ? 'active' : '' }}"
                                 onclick="pdSetMain(this, '{{ asset('storage/' . $img->gambar) }}')">
                                 <img src="{{ asset('storage/' . $img->gambar) }}"
@@ -931,7 +943,7 @@
                             style="font-size:11px; color:#aaa; margin-bottom:2px; text-transform:uppercase; letter-spacing:.04em;">
                             Dikirim dari</div>
                         <div style="font-size:13px; font-weight:500; color:#222;">
-                            {{ $store?->city ?? 'Lokasi tidak tersedia' }}
+                            {{ $store?->alamat ?? 'Lokasi tidak tersedia' }}
                         </div>
                     </div>
                 </div>
@@ -1232,6 +1244,36 @@
                 console.error(e);
             }
         }
+
+        (function() {
+            const wrap = document.getElementById('pdMainWrap');
+            const img = document.getElementById('pdMainImg');
+            const SCALE = 2;
+            let isHovered = false;
+
+            wrap.addEventListener('mouseenter', function() {
+                isHovered = true;
+                img.style.transition = 'transform .2s ease';
+                img.style.transform = `scale(${SCALE})`;
+            });
+
+            wrap.addEventListener('mousemove', function(e) {
+                if (!isHovered) return;
+                const rect = wrap.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                img.style.transition = 'transform-origin .05s ease';
+                img.style.transformOrigin = `${x}% ${y}%`;
+                img.style.transform = `scale(${SCALE})`;
+            });
+
+            wrap.addEventListener('mouseleave', function() {
+                isHovered = false;
+                img.style.transition = 'transform .2s ease, transform-origin .2s ease';
+                img.style.transformOrigin = 'center center';
+                img.style.transform = 'scale(1)';
+            });
+        })();
     </script>
 
     <form id="cartForm" action="{{ route('cart.add') }}" method="POST" style="display:none">

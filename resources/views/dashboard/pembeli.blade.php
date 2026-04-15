@@ -444,6 +444,112 @@
                 font-size: 14px;
             }
 
+            .btn-more {
+                width: auto;
+                height: auto;
+                background: none;
+                border: none;
+                padding: 0;
+                display: inline-flex;
+                align-items: center;
+                cursor: pointer;
+                z-index: 10;
+                transition: color .15s;
+                font-size: 20px;
+                font-weight: 900;
+                color: #64748b;
+                line-height: 1;
+                flex-shrink: 0;
+            }
+
+            .btn-more:hover {
+                background: none;
+                color: #334155;
+            }
+
+            /* Ganti .more-dropdown — sekarang muncul ke ATAS */
+            .more-dropdown {
+                position: absolute;
+                bottom: 36px;
+                /* muncul ke atas tombol */
+                right: 0;
+                background: #fff;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.10);
+                z-index: 100;
+                min-width: 170px;
+                overflow: hidden;
+                display: none;
+            }
+
+            .more-dropdown.show {
+                display: block;
+                animation: dropIn .15s ease;
+            }
+
+            @keyframes dropIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-6px) scale(0.97);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
+            }
+
+            .more-dropdown-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 14px;
+                font-size: 13px;
+                font-weight: 600;
+                color: #334155;
+                cursor: pointer;
+                transition: background .1s;
+                border: none;
+                background: none;
+                width: 100%;
+                text-align: left;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+            }
+
+            .more-dropdown-item:hover {
+                background: #f1f5f9;
+            }
+
+            /* ===== TOAST NOTIF ===== */
+            .wl-toast {
+                position: fixed;
+                bottom: 28px;
+                left: 50%;
+                transform: translateX(-50%) translateY(80px);
+                background: #1e293b;
+                color: #fff;
+                padding: 13px 22px;
+                border-radius: 12px;
+                font-size: 13px;
+                font-weight: 600;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                z-index: 9999;
+                box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+                transition: transform .35s cubic-bezier(.34, 1.56, .64, 1), opacity .3s;
+                opacity: 0;
+                pointer-events: none;
+                white-space: nowrap;
+            }
+
+            .wl-toast.show {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+
             /* ===== RESPONSIVE ===== */
             @media (max-width: 1024px) {
                 .category-grid {
@@ -660,6 +766,7 @@
                         @forelse ($products as $product)
                             <a href="{{ $product->total_stok <= 0 ? 'javascript:void(0)' : route('products.show', $product->product_id) }}"
                                 class="product-card {{ $product->total_stok <= 0 ? 'product-card-disabled' : '' }}">
+
                                 <div class="product-img-wrap">
                                     @if ($product->primaryImage && $product->primaryImage->gambar)
                                         <img src="{{ asset('storage/' . $product->primaryImage->gambar) }}"
@@ -678,8 +785,8 @@
                                 <div class="product-info">
                                     <div class="product-name">{{ $product->nama_produk }}</div>
                                     <div>
-                                        <span
-                                            class="product-price">Rp {{ number_format($product->harga, 0, ',', '.') }}</span>
+                                        <span class="product-price">Rp
+                                            {{ number_format($product->harga, 0, ',', '.') }}</span>
                                     </div>
                                     @php
                                         $avg = round($product->reviews_avg_bintang ?? 0, 1);
@@ -731,14 +838,36 @@
                                         <div class="product-loc">📍
                                             {{ $product->store->nama_toko ?? $product->store->name }}</div>
                                     @endif
-                                    @php $stok = $product->total_stok; @endphp
-                                    @if ($stok <= 0)
-                                        <div class="product-stock out">Stok habis</div>
-                                    @elseif ($stok <= 5)
-                                        <div class="product-stock low">Sisa {{ $stok }} item</div>
-                                    @else
-                                        <div class="product-stock ok">Stok tersedia</div>
-                                    @endif
+
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; position: relative;">
+                                        @php $stok = $product->total_stok; @endphp
+
+                                        <div
+                                            class="product-stock {{ $stok <= 0 ? 'out' : ($stok <= 5 ? 'low' : 'ok') }}">
+                                            @if ($stok <= 0)
+                                                Stok habis
+                                            @elseif ($stok <= 5)
+                                                Sisa {{ $stok }} item
+                                            @else
+                                                Stok tersedia
+                                            @endif
+                                        </div>
+
+                                        <div style="position: relative;">
+                                            <button class="btn-more"
+                                                onclick="toggleDropdown(event, {{ $product->product_id }})">···</button>
+
+                                            <div class="more-dropdown" id="dropdown-{{ $product->product_id }}">
+                                                @php $inWishlist = in_array($product->product_id, $wishlistIds ?? []); @endphp
+                                                <button class="more-dropdown-item"
+                                                    id="btn-wishlist-{{ $product->product_id }}"
+                                                    onclick="addToWishlist(event, {{ $product->product_id }})">
+                                                    {{ $inWishlist ? 'Hapus dari Wishlist' : 'Masukkan ke Wishlist' }}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </a>
                         @empty
@@ -757,6 +886,87 @@
 
             </div>
         </div>
+
+        {{-- Toast Notif Wishlist --}}
+        <div class="wl-toast" id="wl-toast">
+            <span id="wl-toast-msg">Berhasil ditambahkan ke wishlist!</span>
+        </div>
+
+        <script>
+            function toggleDropdown(e, id) {
+                e.preventDefault();
+                e.stopPropagation();
+                const el = document.getElementById('dropdown-' + id);
+                const isOpen = el.classList.contains('show');
+                // tutup semua dropdown dulu
+                document.querySelectorAll('.more-dropdown').forEach(d => d.classList.remove('show'));
+                if (!isOpen) el.classList.add('show');
+            }
+
+            // tutup dropdown kalau klik di luar
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.more-dropdown').forEach(d => d.classList.remove('show'));
+            });
+
+            // DI DASHBOARD - GANTI INI:
+            function addToWishlist(e, productId) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Ambil elemen tombolnya
+                const btn = document.getElementById('btn-wishlist-' + productId);
+
+                document.querySelectorAll('.more-dropdown').forEach(d => d.classList.remove('show'));
+
+                fetch('{{ route('wishlist.toggle') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            product_id: productId
+                        })
+                    })
+                    .then(r => {
+                        if (!r.ok) throw new Error('Network error');
+                        return r.json();
+                    })
+                    .then(data => {
+                        // Cek status dari response backend (added atau removed)
+                        if (data.status === 'added' || data.wishlisted) {
+                            showToast('❤️', 'Ditambahkan ke wishlist!');
+                            if (btn) btn.textContent = 'Hapus dari Wishlist'; // Update teks
+                        } else {
+                            showToast('💔', 'Dihapus dari wishlist');
+                            if (btn) btn.textContent = 'Masukkan ke Wishlist'; // Update teks
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Wishlist error:', err);
+                        showToast('❌', 'Gagal, coba lagi.');
+                    });
+            }
+
+            let toastTimer = null;
+
+            function showToast(icon, msg) {
+                const toast = document.getElementById('wl-toast');
+                const iconEl = document.getElementById('wl-toast-icon');
+                const msgEl = document.getElementById('wl-toast-msg');
+
+                if (iconEl) iconEl.textContent = icon;
+                if (msgEl) msgEl.textContent = msg;
+
+                toast.classList.add('show');
+
+                if (toastTimer) clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        </script>
 
     @endif
 

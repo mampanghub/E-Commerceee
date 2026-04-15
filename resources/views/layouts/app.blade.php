@@ -396,7 +396,7 @@
 
                 <div class="footer-bottom">
                     <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-                        <span>© {{ date('Y') }} MampangPedia. Semua hak dilindungi.</span>
+                        <span>© {{ date('Y') }} MampangPedia. Hak cipta dilindungi.</span>
                     </div>
 
                     <div class="footer-payment">

@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('stores', function (Blueprint $table) {
             $table->bigIncrements('store_id');
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('province_id')->nullable();
-            $table->unsignedBigInteger('city_id')->nullable();
-            $table->unsignedBigInteger('district_id')->nullable();
+            $table->string('province_id')->nullable();
+            $table->string('city_id')->nullable();
+            $table->string('district_id')->nullable();
             $table->string('village_id')->nullable();
             $table->string('nama_toko');
             $table->string('status')->default('pending');

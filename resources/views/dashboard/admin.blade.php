@@ -166,13 +166,23 @@
 
                         {{-- Custom Dropdown Bulan --}}
                         <div class="relative" id="dropdownBulanWrapper">
-                            <button type="button" onclick="toggleDropdown('dropdownBulan')"
-                                class="flex items-center gap-2 min-w-[140px] text-xs font-bold text-slate-600 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 cursor-pointer hover:bg-slate-100 transition-all">
-                                <span
-                                    id="labelBulan">{{ $filterBulan ? \Carbon\Carbon::createFromFormat('Y-m', $filterBulan)->translatedFormat('F Y') : 'Pilih Bulan' }}</span>
-                                <svg class="w-3.5 h-3.5 ml-auto text-slate-400 shrink-0" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            <button onclick="toggleDropdown('dropdownBulan')"
+                                class="px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 flex items-center gap-2 hover:border-blue-500 transition-all">
+                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span>
+                                    @if (request('bulan'))
+                                        {{ collect($filterBulan)->firstWhere('value', request('bulan'))['label'] ?? 'Pilih Bulan' }}
+                                    @else
+                                        Pilih Bulan
+                                    @endif
+                                </span>
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
