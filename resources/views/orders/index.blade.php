@@ -19,7 +19,7 @@
 
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-            @if(($counts['semua'] ?? 0) === 0)
+            @if (($counts['semua'] ?? 0) === 0)
                 <div class="bg-white rounded-3xl border border-slate-100 py-24 text-center">
                     <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                         <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,29 +30,30 @@
                     <p class="font-black text-slate-400 text-sm">Belum ada pesanan masuk</p>
                 </div>
             @else
-
                 {{-- Filter tabs --}}
                 @php
                     $allStatuses = ['semua', 'dibayar', 'dikemas', 'dikirim', 'selesai', 'batal'];
                 @endphp
                 <div class="bg-blue-100/60 rounded-2xl p-1.5 flex overflow-x-auto mb-6 gap-0.5">
-                    @foreach($allStatuses as $s)
-                            @php
-                                $count = $counts[$s] ?? 0;
-                                $isActive = $status === $s;
-                            @endphp
-                            <a href="{{ request()->fullUrlWithQuery(['status' => $s, 'page' => 1]) }}" class="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap
+                    @foreach ($allStatuses as $s)
+                        @php
+                            $count = $counts[$s] ?? 0;
+                            $isActive = $status === $s;
+                        @endphp
+                        <a href="{{ request()->fullUrlWithQuery(['status' => $s, 'page' => 1]) }}"
+                            class="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap
                                 {{ $isActive
-                        ? 'bg-white text-blue-600 shadow-sm shadow-blue-100'
-                        : 'text-blue-400 hover:text-blue-600 hover:bg-white/50' }}">
-                                {{ ucfirst($s) }}
-                                @if($count > 0)
-                                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-black
+                                    ? 'bg-white text-blue-600 shadow-sm shadow-blue-100'
+                                    : 'text-blue-400 hover:text-blue-600 hover:bg-white/50' }}">
+                            {{ ucfirst($s) }}
+                            @if ($count > 0)
+                                <span
+                                    class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-black
                                             {{ $isActive ? 'bg-blue-600 text-white' : 'bg-blue-200/70 text-blue-500' }}">
-                                        {{ $count }}
-                                    </span>
-                                @endif
-                            </a>
+                                    {{ $count }}
+                                </span>
+                            @endif
+                        </a>
                     @endforeach
                 </div>
 
@@ -63,9 +64,9 @@
                             $firstItem = $order->items->first();
                             $displayImage = null;
                             if ($firstItem && $firstItem->product) {
-                                $displayImage = $firstItem->product->images->where('variant_id', $firstItem->variant_id)->first()
-                                    ?? $firstItem->product->primaryImage
-                                    ?? $firstItem->product->images->first();
+                                $displayImage =
+                                    $firstItem->product->images->where('variant_id', $firstItem->variant_id)->first() ??
+                                    ($firstItem->product->primaryImage ?? $firstItem->product->images->first());
                             }
 
                             $statusConfig = [
@@ -75,7 +76,10 @@
                                 'selesai' => ['bg-emerald-50 text-emerald-700', 'Selesai'],
                                 'batal' => ['bg-rose-50 text-rose-700', 'Dibatalkan'],
                             ];
-                            [$badgeClass, $statusLabel] = $statusConfig[$order->status] ?? ['bg-slate-50 text-slate-600', ucfirst($order->status)];
+                            [$badgeClass, $statusLabel] = $statusConfig[$order->status] ?? [
+                                'bg-slate-50 text-slate-600',
+                                ucfirst($order->status),
+                            ];
                         @endphp
 
                         <div
@@ -84,13 +88,14 @@
 
                                 {{-- Foto --}}
                                 <div class="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 shrink-0">
-                                    @if($displayImage)
+                                    @if ($displayImage)
                                         <img src="{{ asset('storage/' . $displayImage->gambar) }}"
                                             class="w-full h-full object-cover"
                                             onerror="this.src='https://placehold.co/56x56?text=?'">
                                     @else
                                         <div class="w-full h-full flex items-center justify-center text-slate-300">
-                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
@@ -115,7 +120,7 @@
 
                                     {{-- Produk --}}
                                     <div class="flex flex-wrap gap-1">
-                                        @foreach($order->items as $it)
+                                        @foreach ($order->items as $it)
                                             <span
                                                 class="text-[10px] bg-blue-50 text-blue-500 px-2 py-0.5 rounded-lg border border-blue-100 font-medium">
                                                 {{ $it->jumlah }}×
@@ -125,8 +130,9 @@
                                     </div>
 
                                     {{-- Kurir & resi --}}
-                                    @if(in_array($order->status, ['dikirim', 'selesai']) && $order->nama_kurir)
-                                        <p class="text-[10px] font-black text-violet-500 mt-1.5 uppercase tracking-wide">
+                                    @if (in_array($order->status, ['dikirim', 'selesai']) && $order->nama_kurir)
+                                        <p
+                                            class="text-[10px] font-black text-violet-500 mt-1.5 uppercase tracking-wide">
                                             {{ $order->nama_kurir }} · {{ $order->nomor_resi }}
                                         </p>
                                     @endif
@@ -135,15 +141,27 @@
                                 {{-- Total + aksi --}}
                                 <div class="flex items-center gap-2 shrink-0">
                                     <div class="text-right hidden sm:block mr-2">
-                                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Total</p>
+                                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Total
+                                        </p>
                                         <p class="font-black text-slate-900 text-sm">Rp
                                             {{ number_format($order->total_harga, 0, ',', '.') }}</p>
                                     </div>
-                                    @if($order->status === 'dibayar')
-                                        <a href="{{ route('orders.cetak-resi', $order->order_id) }}" target="_blank"
-                                            class="px-3 py-2.5 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-xl text-xs font-black hover:bg-indigo-100 transition-all whitespace-nowrap">
-                                            🖨️ Cetak Resi
-                                        </a>
+                                    @if ($order->status === 'dibayar')
+                                        <div class="flex flex-col items-end gap-1">
+                                            <button onclick="cetakResi({{ $order->order_id }})"
+                                                class="px-3 py-2.5 rounded-xl text-xs font-black transition-all whitespace-nowrap
+            {{ $order->resi_dicetak_at
+                ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100'
+                : 'bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100' }}"
+                                                id="btn-resi-{{ $order->order_id }}">
+                                                {{ $order->resi_dicetak_at ? '✅ Cetak Ulang' : '🖨️ Cetak Resi' }}
+                                            </button>
+                                            @if ($order->resi_dicetak_at)
+                                                <span class="text-[10px] text-slate-400">
+                                                    {{ $order->resi_dicetak_at->diffForHumans() }}
+                                                </span>
+                                            @endif
+                                        </div>
                                     @endif
                                     <a href="{{ route('orders.show', $order->order_id) }}"
                                         class="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 transition-all">
@@ -156,17 +174,19 @@
 
                     @empty
                         <div class="bg-white rounded-2xl border border-slate-100 py-16 text-center">
-                            <p class="text-sm font-black text-slate-300 uppercase tracking-widest">Tidak ada order {{ $status }}
+                            <p class="text-sm font-black text-slate-300 uppercase tracking-widest">Tidak ada order
+                                {{ $status }}
                             </p>
                         </div>
                     @endforelse
                 </div>
 
                 {{-- PAGINATION --}}
-                @if($orders->hasPages())
+                @if ($orders->hasPages())
                     <div class="mt-6 flex items-center justify-between">
                         <p class="text-xs text-slate-400 font-semibold">
-                            Menampilkan {{ $orders->firstItem() }}–{{ $orders->lastItem() }} dari {{ $orders->total() }} order
+                            Menampilkan {{ $orders->firstItem() }}–{{ $orders->lastItem() }} dari
+                            {{ $orders->total() }} order
                         </p>
                         <div>
                             {{ $orders->links() }}
@@ -177,4 +197,25 @@
             @endif
         </div>
     </div>
+    <script>
+        function cetakResi(orderId) {
+    // 1. Generate & simpan resi dulu via cetakResi route (dalam iframe tersembunyi)
+    fetch(`/orders/${orderId}/generate-resi`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            // 2. Baru buka tab PDF setelah resi tersimpan
+            window.open(`/orders/${orderId}/cetak-resi`, '_blank');
+            // 3. Update tombol & reload
+            setTimeout(() => location.reload(), 1500);
+        }
+    });
+}
+    </script>
 </x-app-layout>

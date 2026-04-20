@@ -85,16 +85,16 @@
 
             /* ===== HERO ===== */
             .hero-section {
-                margin-bottom: 24px;
+                margin-bottom: 16px;
             }
 
             .hero-banner {
                 background: linear-gradient(135deg, var(--mp-blue-800) 0%, var(--mp-blue-600) 55%, #3b82f6 100%);
                 border-radius: 16px;
-                padding: 60px 40px;
+                padding: 36px 40px;
                 position: relative;
                 overflow: hidden;
-                min-height: 280px;
+                min-height: 220px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -243,7 +243,7 @@
 
             /* ===== CATEGORY ===== */
             .category-section {
-                margin-bottom: 24px;
+                margin-bottom: 16px;
             }
 
             .category-grid {
@@ -674,7 +674,7 @@
                 overflow: hidden;
                 position: relative;
                 user-select: none;
-                margin-bottom: 24px;
+                margin-bottom: 16px;
             }
 
             .cs-track {
@@ -684,12 +684,12 @@
 
             .cs-slide {
                 min-width: 100%;
-                padding: 50px 40px;
+                padding: 32px 40px;
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                min-height: 220px;
+                min-height: 200px;
                 position: relative;
                 overflow: hidden;
             }
@@ -839,7 +839,7 @@
                 position: absolute;
                 bottom: 100px;
                 /* taruh di bawah, di atas dots carousel */
-                left: 50%;
+                left: 52%;
                 transform: translateX(-50%);
                 display: flex;
                 flex-direction: row;
@@ -1020,7 +1020,7 @@
         </div>
 
         <div class="mp-page">
-            <div class="mp-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="mp-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-0">
 
                 {{-- HERO --}}
                 <section class="hero-section">

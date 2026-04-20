@@ -16,7 +16,7 @@ class HomeController extends Controller
         $products = Product::with(['primaryImage', 'store', 'category', 'variants'])
             ->withAvg('reviews', 'bintang')
             ->withCount('reviews')
-            ->withCount(['orderItems as terjual' => fn($q) => $q->whereHas('order', fn($o) => $o->whereIn('status', ['dikirim', 'selesai']))])
+            ->withCount(['orderItems as terjual' => fn($q) => $q->whereHas('order', fn($o) => $o->whereIn('status', ['dibayar', 'dikemas', 'dikirim', 'selesai']))])
             ->latest()
             ->limit(10)
             ->get();
@@ -110,7 +110,7 @@ class HomeController extends Controller
         $query = Product::with(['primaryImage', 'category', 'store'])
             ->withAvg('reviews', 'bintang')
             ->withCount('reviews')
-            ->withCount(['orderItems as terjual' => fn($q) => $q->whereHas('order', fn($o) => $o->whereIn('status', ['dikirim', 'selesai']))]);
+            ->withCount(['orderItems as terjual' => fn($q) => $q->whereHas('order', fn($o) => $o->whereIn('status', ['dibayar', 'dikemas', 'dikirim', 'selesai']))]);
 
         if ($request->has('search')) {
             $query->where('nama_produk', 'like', '%' . $request->search . '%');

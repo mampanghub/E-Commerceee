@@ -66,6 +66,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/shipping-settings', [ShippingSettingController::class, 'index'])->name('admin.shipping-settings.index');
     Route::put('/admin/shipping-settings', [ShippingSettingController::class, 'update'])->name('admin.shipping-settings.update');
     Route::patch('/profile/store', [ProfileController::class, 'updateStore'])->name('profile.store.update');
+    Route::post('/orders/{id}/mark-resi-dicetak', [OrderController::class, 'markResiDicetak'])
+    ->name('orders.mark-resi-dicetak');
+    Route::post('/orders/{id}/generate-resi', [OrderController::class, 'generateResi'])->name('orders.generate-resi');
 });
 
 // ===== PEMBELI =====
@@ -88,7 +91,6 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
     Route::post('/orders/{id}/confirm-delivery', [OrderController::class, 'confirmDelivery'])->name('orders.confirm-delivery');
-    Route::get('/orders/{id}/invoice/print', [OrderController::class, 'invoicePrint'])->name('orders.invoice-print');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -122,5 +124,9 @@ Route::get('/search/suggestions', [ProductController::class, 'suggestions'])->na
 
 Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('auth.google');
 Route::get('/auth/google/callback', [GoogleController::class, 'callback']);
+
+Route::get('/orders/{id}/invoice/print', [OrderController::class, 'invoicePrint'])
+    ->name('orders.invoice-print')
+    ->middleware('signed');
 
 require __DIR__ . '/auth.php';

@@ -628,26 +628,46 @@ class OrderController extends Controller
             'shippingOption',
         ])->findOrFail($id);
 
-        if (auth()->user()->role !== 'admin' && $order->user_id !== auth()->id()) {
-            abort(403);
-        }
-
         return view('orders.invoice-print', compact('order'));
     }
 
     public function cetakResi($id)
     {
-        $order = Order::with([
-            'user',
-            'items.product',
-            'items.variant',
-            'shippingZone',
-            'shippingOption',
-        ])->findOrFail($id);
+        $order = Order::with(['user', 'items.product', 'items.variant', 'shippingZone', 'shippingOption'])
+            ->findOrFail($id);
 
-        if (auth()->user()->role !== 'admin')
-            abort(403);
+        if (auth()->user()->role !== 'admin') abort(403);
 
         return view('orders.cetak-resi', compact('order'));
+    }
+
+    public function markResiDicetak($id)
+    {
+        $order = Order::findOrFail($id);
+        $order->update(['resi_dicetak_at' => now()]);
+        return response()->json([
+            'success' => true,
+            'nomor_resi' => $order->nomor_resi,
+        ]);
+    }
+
+    public function generateResi($id)
+    {
+        if (auth()->user()->role !== 'admin') abort(403);
+
+        $order = Order::findOrFail($id);
+
+        if (!$order->nomor_resi) {
+            $prefix = 'MMP';
+            $nomorResi = $prefix . str_pad($order->order_id, 6, '0', STR_PAD_LEFT) . strtoupper(substr(md5($order->order_id), 0, 4));
+            $order->update(['nomor_resi' => $nomorResi]);
+        }
+
+        $order->update(['resi_dicetak_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'nomor_resi' => $order->nomor_resi,
+        ]);
     }
 }

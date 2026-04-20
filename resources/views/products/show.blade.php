@@ -777,7 +777,7 @@
                     $totalTerjual =
                         $product
                             ->orderItems()
-                            ->whereHas('order', fn($q) => $q->whereIn('status', ['selesai', 'dikirim', 'diproses']))
+                            ->whereHas('order', fn($q) => $q->whereIn('status', ['dibayar', 'dikemas', 'selesai', 'dikirim', 'diproses']))
                             ->sum('jumlah') ?? 0;
 
                     $allShippingOptions = \App\Models\ShippingOption::orderBy('kurang_hari', 'asc')->get();

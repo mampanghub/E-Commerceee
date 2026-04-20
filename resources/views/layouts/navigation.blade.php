@@ -235,7 +235,7 @@
     .mp-cart-badge {
         position: absolute;
         top: 2px;
-        right: 6px;
+        right: 2px;
         background: #ef4444;
         color: #fff;
         font-size: 10px;
@@ -543,12 +543,34 @@
                         Produk
                     </a>
                     <a href="{{ route('orders.index') }}"
-                        class="mp-nav-link {{ request()->routeIs('orders.index') ? 'active' : '' }}">
+                        class="mp-nav-link {{ request()->routeIs('orders.index') ? 'active' : '' }}"
+                        style="position:relative;">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
                         Pesanan
+                        @if (($pendingOrderCount ?? 0) > 0)
+                            <span
+                                style="
+                                    position:absolute;
+                                    top:-4px;
+                                    right:-8px;
+                                    background:#ef4444;
+                                    color:#fff;
+                                    font-size:10px;
+                                    font-weight:800;
+                                    border-radius:9999px;
+                                    min-width:18px;
+                                    height:18px;
+                                    padding:0 4px;
+                                    display:inline-flex;
+                                    align-items:center;
+                                    justify-content:center;
+                                    line-height:1;
+                                    border:2px solid #1d4ed8;
+                                ">{{ $pendingOrderCount }}</span>
+                        @endif
                     </a>
                     <a href="{{ route('categories.index') }}"
                         class="mp-nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}">
@@ -888,6 +910,10 @@
                             <path
                                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
+                        @if (($pendingOrderCount ?? 0) > 0)
+                            <span
+                                class="mp-bottom-nav-badge">{{ $pendingOrderCount > 99 ? '99+' : $pendingOrderCount }}</span>
+                        @endif
                         Pesanan
                     </a>
                     <a href="{{ route('categories.index') }}"
@@ -922,7 +948,7 @@
                                 d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                         @if (($cartCount ?? 0) > 0)
-                            <span class="mp-bottom-nav-badge">{{ $cartCount }}</span>
+                            <span class="mp-bottom-nav-badge">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>
                         @endif
                         Keranjang
                     </a>

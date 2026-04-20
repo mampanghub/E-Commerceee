@@ -9,11 +9,7 @@
                         <span
                             class="text-xs font-black uppercase tracking-widest text-blue-500 bg-blue-50 px-3 py-1 rounded-full">Kurir
                             Dashboard</span>
-                        <h1 class="text-3xl font-black text-slate-900 tracking-tight mt-2">
-                            Halo, {{ Auth::user()->name }} 👋
-                        </h1>
-                        <p class="text-sm text-slate-400 font-medium mt-1">Ambil paket yang tersedia, siapa cepat dia
-                            dapat!</p>
+                        <p class="text-sm text-slate-400 font-medium mt-1">Ambil paket yang tersedia</p>
                     </div>
                     <div class="flex gap-3">
                         {{-- Tersedia --}}

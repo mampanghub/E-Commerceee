@@ -241,7 +241,7 @@
     </div>
 
     {{-- Footer hanya untuk pembeli dan guest, bukan admin --}}
-    @if (!auth()->check() || auth()->user()->role !== 'admin')
+    @if (!auth()->check() || auth()->user()->role !== 'admin' && auth()->user()->role !== 'kurir')
         <footer class="mp-footer">
             <div class="mp-footer-inner">
                 <div class="footer-grid">
@@ -412,87 +412,6 @@
         </footer>
     @endif
 
-    {{-- Loading Screen --}}
-    <div id="mp-loading"
-        style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(30,64,175,0.55); backdrop-filter:blur(8px); align-items:center; justify-content:center; flex-direction:column; gap:20px; overflow:hidden;">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:16px;z-index:1;">
-            <div style="animation:mp-cart-walk 0.6s ease-in-out infinite alternate;">
-                <svg width="64" height="64" fill="none" viewBox="0 0 24 24"
-                    style="filter:drop-shadow(0 4px 12px rgba(147,197,253,0.4));">
-                    <path stroke="#93c5fd" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    <rect x="10" y="6" width="4" height="3" rx="1" fill="#93c5fd"
-                        style="animation:mp-item-bounce 0.6s ease-in-out infinite alternate;" />
-                </svg>
-            </div>
-            <div
-                style="font-family:'Plus Jakarta Sans',sans-serif;font-size:28px;font-weight:800;color:#fff;letter-spacing:-1px;">
-                Mampang<span style="color:#93c5fd;">Pedia</span>
-            </div>
-            <div
-                style="font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;color:rgba(147,197,253,0.7);letter-spacing:2px;text-transform:uppercase;">
-                Sedang memuat...
-            </div>
-        </div>
-        <div
-            style="width:160px;height:3px;background:rgba(255,255,255,0.15);border-radius:99px;overflow:hidden;z-index:1;">
-            <div
-                style="height:100%;background:#93c5fd;border-radius:99px;animation:mp-progress 1.8s ease-in-out infinite;">
-            </div>
-        </div>
-    </div>
-
-    <style>
-        @keyframes mp-cart-walk {
-            0% {
-                transform: translateX(-6px) rotate(-5deg)
-            }
-
-            100% {
-                transform: translateX(6px) rotate(5deg)
-            }
-        }
-
-        @keyframes mp-item-bounce {
-            0% {
-                transform: translateY(0)
-            }
-
-            100% {
-                transform: translateY(-3px)
-            }
-        }
-
-        @keyframes mp-progress {
-            0% {
-                width: 0%;
-                margin-left: 0%
-            }
-
-            50% {
-                width: 70%;
-                margin-left: 15%
-            }
-
-            100% {
-                width: 0%;
-                margin-left: 100%
-            }
-        }
-    </style>
-
-    <script>
-        (function() {
-            const loader = document.getElementById('mp-loading');
-            document.querySelectorAll('a').forEach(a => {
-                if (a.href && !a.href.startsWith('#') && !a.href.startsWith('mailto') && a.target !==
-                    '_blank') {
-                    a.addEventListener('click', () => loader.style.display = 'flex');
-                }
-            });
-            window.addEventListener('pageshow', () => loader.style.display = 'none');
-        })();
-    </script>
 </body>
 
 </html>

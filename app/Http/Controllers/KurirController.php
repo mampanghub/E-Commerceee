@@ -46,9 +46,14 @@ class KurirController extends Controller
                     });
             })
             ->with([
-                'user.province', 'user.city', 'user.district', 'user.village',
-                'items.product.primaryImage', 'items.product.images',
-                'items.variant', 'shippingOption',
+                'user.province',
+                'user.city',
+                'user.district',
+                'user.village',
+                'items.product.primaryImage',
+                'items.product.images',
+                'items.variant',
+                'shippingOption',
             ])
             ->firstOrFail();
 
@@ -65,8 +70,12 @@ class KurirController extends Controller
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                $resiPrefix = strtoupper(substr(Auth::user()->name, 0, 3));
-                $nomorResi  = $resiPrefix . Auth::id() . $order->order_id . time();
+                // Pakai resi dari admin kalau sudah ada, baru generate kalau belum
+                $nomorResi = $order->nomor_resi;
+                if (!$nomorResi) {
+                    $nomorResi = 'MMP' . str_pad($order->order_id, 6, '0', STR_PAD_LEFT)
+                        . strtoupper(substr(md5($order->order_id), 0, 4));
+                }
 
                 $order->update([
                     'kurir_id'   => Auth::id(),
@@ -96,8 +105,11 @@ class KurirController extends Controller
             if ($order->status !== 'dikemas') {
                 return back()->with('error', 'Order belum dikemas, tidak bisa dikirim!');
             }
-            $resiPrefix = strtoupper(substr(Auth::user()->name, 0, 3));
-            $nomorResi  = $resiPrefix . Auth::id() . $order->order_id . time();
+            $nomorResi = $order->nomor_resi;
+            if (!$nomorResi) {
+                $nomorResi = 'MP' . str_pad($order->order_id, 6, '0', STR_PAD_LEFT)
+                    . strtoupper(substr(md5($order->order_id), 0, 4));
+            }
             $order->update([
                 'status'     => 'dikirim',
                 'nomor_resi' => $nomorResi,

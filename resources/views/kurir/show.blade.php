@@ -73,12 +73,6 @@
                             @endphp
                             <span
                                 class="px-4 py-2 rounded-xl text-sm font-black {{ $statusClass }}">{{ $statusLabel }}</span>
-                            @if ($order->nomor_resi)
-                                <span class="text-sm text-slate-500 font-semibold">
-                                    Resi: <span
-                                        class="font-black text-slate-800 font-mono">{{ $order->nomor_resi }}</span>
-                                </span>
-                            @endif
                         </div>
 
                         @if ($order->estimasi_tiba)
@@ -100,7 +94,7 @@
                                         {{ $order->estimasi_tiba->translatedFormat('d M Y') }}
                                     @endif
                                 </div>
-                                @php $sisaHari = now()->diffInDays($order->estimasi_tiba, false); @endphp
+                                @php $sisaHari = (int) now()->startOfDay()->diffInDays($order->estimasi_tiba->startOfDay(), false); @endphp
                                 <div class="ml-auto text-right">
                                     <span
                                         class="text-xs font-black px-2 py-1 rounded-lg
@@ -295,17 +289,6 @@
                                 </p>
                             </form>
                         </div>
-                    @endif
-
-                    @if ($order->nomor_resi)
-                        <button onclick="cetakResi()"
-                            class="w-full px-4 py-3.5 bg-slate-100 text-slate-700 text-sm font-black rounded-2xl hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                            </svg>
-                            Cetak Resi
-                        </button>
                     @endif
 
                     <a href="{{ route('kurir.saldo') }}"

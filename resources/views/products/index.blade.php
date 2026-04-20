@@ -91,67 +91,85 @@
 
                                     {{-- VARIAN --}}
                                     <td class="px-6 py-4">
-                                        <div class="flex flex-wrap gap-2 mb-2">
-                                            @foreach ($item->variants as $variant)
-                                                <div
-                                                    class="inline-flex flex-col bg-white border border-gray-200 rounded-lg p-2 min-w-[100px] shadow-sm">
-                                                    <span
-                                                        class="text-[10px] font-bold text-gray-500 uppercase tracking-tight">{{ $variant->nama_varian }}</span>
-                                                    <div class="flex items-center justify-between mt-1 gap-1">
+                                        @php $variantCount = $item->variants->count(); @endphp
+
+                                        <button type="button" onclick="toggleVariants({{ $item->product_id }})"
+                                            class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-100 transition-colors">
+                                            <svg id="chevron-{{ $item->product_id }}"
+                                                class="w-3.5 h-3.5 transition-transform duration-200" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                                    d="M9 5l7 7-7 7" />
+                                            </svg>
+                                            {{ $variantCount }} Varian
+                                            @php $totalStok = $item->variants->sum('stok'); @endphp
+                                            <span class="text-gray-400 font-normal">· {{ $totalStok }} pcs</span>
+                                        </button>
+
+                                        <div id="variants-{{ $item->product_id }}" class="hidden mt-3">
+                                            <div class="flex flex-wrap gap-2 mb-2">
+                                                @foreach ($item->variants as $variant)
+                                                    <div
+                                                        class="inline-flex flex-col bg-white border border-gray-200 rounded-lg p-2 min-w-[100px] shadow-sm">
                                                         <span
-                                                            class="text-xs font-bold {{ $variant->stok <= 5 ? 'text-red-600' : 'text-indigo-600' }}">
-                                                            {{ $variant->stok }} <small
-                                                                class="text-gray-400 font-normal">pcs</small>
-                                                        </span>
-                                                        <div class="flex items-center gap-1">
-                                                            <form
-                                                                action="{{ route('variants.add-stock', $variant->variant_id) }}"
-                                                                method="POST" class="flex items-center">
-                                                                @csrf
-                                                                <input type="number" name="jumlah_masuk" min="1"
-                                                                    class="w-10 px-1 py-0.5 text-[10px] border-gray-200 rounded-l focus:ring-0 focus:border-indigo-400"
-                                                                    placeholder="+0" required>
-                                                                <button type="submit" title="Tambah stok"
-                                                                    class="bg-indigo-600 text-white p-1 rounded-r hover:bg-indigo-700 transition">
-                                                                    <svg class="w-2.5 h-2.5" fill="none"
-                                                                        stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round"
-                                                                            stroke-linejoin="round" stroke-width="3"
-                                                                            d="M12 4v16m8-8H4" />
-                                                                    </svg>
-                                                                </button>
-                                                            </form>
-                                                            <form
-                                                                action="{{ route('variants.reduce-stock', $variant->variant_id) }}"
-                                                                method="POST" class="flex items-center">
-                                                                @csrf
-                                                                <input type="number" name="jumlah_kurang"
-                                                                    min="1" max="{{ $variant->stok }}"
-                                                                    class="w-10 px-1 py-0.5 text-[10px] border-gray-200 rounded-l focus:ring-0 focus:border-rose-400"
-                                                                    placeholder="-0" required>
-                                                                <button type="submit" title="Kurangi stok"
-                                                                    class="{{ $variant->stok == 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-rose-500 hover:bg-rose-600' }} text-white p-1 rounded-r transition"
-                                                                    {{ $variant->stok == 0 ? 'disabled' : '' }}>
-                                                                    <svg class="w-2.5 h-2.5" fill="none"
-                                                                        stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round"
-                                                                            stroke-linejoin="round" stroke-width="3"
-                                                                            d="M20 12H4" />
-                                                                    </svg>
-                                                                </button>
-                                                            </form>
+                                                            class="text-[10px] font-bold text-gray-500 uppercase tracking-tight">{{ $variant->nama_varian }}</span>
+                                                        <div class="flex items-center justify-between mt-1 gap-1">
+                                                            <span
+                                                                class="text-xs font-bold {{ $variant->stok <= 5 ? 'text-red-600' : 'text-indigo-600' }}">
+                                                                {{ $variant->stok }} <small
+                                                                    class="text-gray-400 font-normal">pcs</small>
+                                                            </span>
+                                                            <div class="flex items-center gap-1">
+                                                                <form
+                                                                    action="{{ route('variants.add-stock', $variant->variant_id) }}"
+                                                                    method="POST" class="flex items-center">
+                                                                    @csrf
+                                                                    <input type="number" name="jumlah_masuk"
+                                                                        min="1"
+                                                                        class="w-10 px-1 py-0.5 text-[10px] border-gray-200 rounded-l focus:ring-0 focus:border-indigo-400"
+                                                                        placeholder="+0" required>
+                                                                    <button type="submit" title="Tambah stok"
+                                                                        class="bg-indigo-600 text-white p-1 rounded-r hover:bg-indigo-700 transition">
+                                                                        <svg class="w-2.5 h-2.5" fill="none"
+                                                                            stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round"
+                                                                                stroke-linejoin="round" stroke-width="3"
+                                                                                d="M12 4v16m8-8H4" />
+                                                                        </svg>
+                                                                    </button>
+                                                                </form>
+                                                                <form
+                                                                    action="{{ route('variants.reduce-stock', $variant->variant_id) }}"
+                                                                    method="POST" class="flex items-center">
+                                                                    @csrf
+                                                                    <input type="number" name="jumlah_kurang"
+                                                                        min="1" max="{{ $variant->stok }}"
+                                                                        class="w-10 px-1 py-0.5 text-[10px] border-gray-200 rounded-l focus:ring-0 focus:border-rose-400"
+                                                                        placeholder="-0" required>
+                                                                    <button type="submit" title="Kurangi stok"
+                                                                        class="{{ $variant->stok == 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-rose-500 hover:bg-rose-600' }} text-white p-1 rounded-r transition"
+                                                                        {{ $variant->stok == 0 ? 'disabled' : '' }}>
+                                                                        <svg class="w-2.5 h-2.5" fill="none"
+                                                                            stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round"
+                                                                                stroke-linejoin="round"
+                                                                                stroke-width="3" d="M20 12H4" />
+                                                                        </svg>
+                                                                    </button>
+                                                                </form>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            @endforeach
+                                                @endforeach
+                                            </div>
+                                            <button type="button"
+                                                onclick="openVariantModal('{{ $item->product_id }}', '{{ $item->nama_produk }}')"
+                                                class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 group">
+                                                <i
+                                                    class="fas fa-plus-circle transition-transform group-hover:rotate-90"></i>
+                                                TAMBAH VARIAN
+                                            </button>
                                         </div>
-                                        <button type="button"
-                                            onclick="openVariantModal('{{ $item->product_id }}', '{{ $item->nama_produk }}')"
-                                            class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 group">
-                                            <i
-                                                class="fas fa-plus-circle transition-transform group-hover:rotate-90"></i>
-                                            TAMBAH VARIAN
-                                        </button>
                                     </td>
 
                                     {{-- KATEGORI — FIX: whitespace-nowrap + min-width --}}
@@ -330,5 +348,13 @@
                 }, 5000);
             }
         });
+
+        function toggleVariants(productId) {
+            const panel = document.getElementById('variants-' + productId);
+            const chevron = document.getElementById('chevron-' + productId);
+            const isHidden = panel.classList.contains('hidden');
+            panel.classList.toggle('hidden', !isHidden);
+            chevron.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+        }
     </script>
 </x-app-layout>
